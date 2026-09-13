@@ -1,0 +1,834 @@
+<!--
+  ULTRA PREMIUM PROMPT LIBRARY (V4)
+  Optimized for rtmcreator.com - Sophisticated Dark Mode
+  Paste this into your WordPress page using the "Custom HTML" block.
+-->
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- FontAwesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* 
+   ULTRA PREMIUM DESIGN SYSTEM (V4)
+   Optimized for WordPress Containers
+*/
+:root {
+  --pl-bg: #05070a;
+  --pl-surface: rgba(13, 17, 27, 0.95);
+  --pl-card-bg: rgba(255, 255, 255, 0.03);
+  --pl-accent: #8b5cf6;
+  --pl-accent-rgb: 139, 92, 246;
+  --pl-secondary: #3b82f6;
+  --pl-text: #f8fafc;
+  --pl-text-dim: #94a3b8;
+  --pl-border: rgba(255, 255, 255, 0.1);
+  --pl-gradient: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+  --pl-radius: 32px;
+}
+
+#pl-wrapper {
+  background: var(--pl-bg);
+  color: var(--pl-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  padding: 80px 24px;
+  position: relative;
+  overflow-x: hidden;
+  line-height: 1.5;
+  width: 100%;
+}
+
+#pl-wrapper * { 
+  box-sizing: border-box; 
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Background Mesh */
+#pl-mesh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: 
+    radial-gradient(at 0% 0%, rgba(var(--pl-accent-rgb), 0.15) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(var(--pl-accent-rgb), 0.1) 0, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.08) 0, transparent 50%);
+  filter: blur(100px);
+  animation: plMeshFlow 25s ease-in-out infinite alternate;
+}
+
+@keyframes plMeshFlow {
+  from { transform: translate(-5%, -5%) scale(1); }
+  to { transform: translate(5%, 5%) scale(1.15); }
+}
+
+/* Header */
+#pl-header {
+  text-align: center;
+  margin-bottom: 72px;
+  position: relative;
+  z-index: 10;
+}
+
+#pl-header h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2.8rem, 9vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  margin: 0 0 16px;
+  background: linear-gradient(to bottom, #fff 40%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+#pl-header p {
+  color: var(--pl-text-dim);
+  font-size: 1.25rem;
+  max-width: 600px;
+  margin: 0 auto;
+  opacity: 0.8;
+}
+
+/* Search Container */
+#pl-search-wrap {
+  max-width: 720px;
+  margin: 0 auto 64px;
+  position: relative;
+  z-index: 10;
+  padding: 0 10px;
+}
+
+#pl-search {
+  width: 100%;
+  padding: 24px 32px 24px 64px;
+  background: var(--pl-surface);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid var(--pl-border);
+  border-radius: 22px;
+  color: #fff;
+  font-size: 1.1rem;
+  outline: none;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+}
+
+#pl-search:focus {
+  border-color: var(--pl-accent);
+  box-shadow: 0 0 0 5px rgba(var(--pl-accent-rgb), 0.2), 0 35px 70px rgba(0,0,0,0.5);
+  transform: translateY(-3px);
+}
+
+#pl-search-wrap::before {
+  content: "🔍";
+  position: absolute;
+  left: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
+  opacity: 0.6;
+}
+
+/* Filters */
+#pl-filters {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 72px;
+  position: relative;
+  z-index: 10;
+  padding: 0 10px;
+}
+
+.pl-filter-btn {
+  padding: 12px 28px;
+  background: var(--pl-card-bg);
+  border: 1px solid var(--pl-border);
+  border-radius: 100px;
+  color: var(--pl-text-dim);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.pl-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-4px);
+}
+
+.pl-filter-btn.active {
+  background: var(--pl-accent);
+  color: #fff;
+  border-color: var(--pl-accent);
+  box-shadow: 0 12px 24px rgba(var(--pl-accent-rgb), 0.4);
+}
+
+/* Grid & Cards */
+#pl-grid-container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+}
+
+#pl-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  #pl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+}
+
+@media (max-width: 768px) {
+  #pl-grid { grid-template-columns: 1fr; gap: 20px; }
+  #pl-header h1 { font-size: 2.6rem; letter-spacing: -0.03em; }
+  #pl-header p { font-size: 1.1rem; padding: 0 20px; }
+  #pl-wrapper { padding: 40px 10px; }
+  #pl-grid-container { padding: 0 10px; }
+  .pl-card { padding: 20px; border-radius: 28px; gap: 20px; }
+  .pl-card-title { font-size: 1.4rem; }
+  .pl-card-footer { flex-direction: column; align-items: stretch; gap: 20px; }
+  .pl-creator-wrap { justify-content: center; width: 100%; }
+  .pl-btn-group { justify-content: space-between; width: 100%; }
+  .pl-copy-btn { flex: 1; text-align: center; justify-content: center; }
+  .pl-modal-content { padding: 40px 20px; }
+  #pl-modal-close { top: 12px; right: 12px; width: 44px; height: 44px; }
+}
+
+.pl-card {
+  background: var(--pl-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--pl-border);
+  border-radius: var(--pl-radius);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  cursor: pointer;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  width: 100%;
+  position: relative;
+}
+
+.pl-card:hover {
+  transform: translateY(-12px);
+  border-color: rgba(var(--pl-accent-rgb), 0.6);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+  background: rgba(20, 24, 40, 0.98);
+}
+
+.pl-card-img-wrap {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #000;
+  position: relative;
+}
+
+.pl-card-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pl-card:hover .pl-card-img { transform: scale(1.08); }
+
+.pl-card-body { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.pl-cat-badge {
+  background: rgba(var(--pl-accent-rgb), 0.2) !important;
+  color: #a78bfa !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  padding: 6px 14px !important;
+  border-radius: 100px !important;
+  border: 1px solid rgba(var(--pl-accent-rgb), 0.4) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  display: inline-block !important;
+}
+
+.pl-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff !important;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.pl-card-preview {
+  color: var(--pl-text-dim) !important;
+  font-size: 1rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.pl-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 24px;
+  border-top: 1px solid var(--pl-border);
+  margin-top: auto;
+}
+
+.pl-creator-wrap { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  overflow: hidden;
+  max-width: 60%;
+}
+
+.pl-creator-name {
+  font-size: 0.95rem; 
+  font-weight: 700; 
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pl-avatar {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  background: var(--pl-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 800; color: #fff;
+}
+
+.pl-btn-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pl-copy-btn {
+  background: var(--pl-accent) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 14px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  box-shadow: 0 10px 20px rgba(var(--pl-accent-rgb), 0.3) !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.pl-share-btn {
+  width: 44px !important; height: 44px !important;
+  background: rgba(255,255,255,0.1) !important;
+  border: 1px solid var(--pl-border) !important;
+  border-radius: 12px !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  cursor: pointer !important;
+  color: #fff !important;
+  font-size: 1.1rem !important;
+}
+
+.pl-share-btn i { color: #fff !important; display: inline-block !important; }
+
+.pl-share-btn:hover { 
+  background: var(--pl-accent) !important; 
+  border-color: var(--pl-accent) !important; 
+  transform: scale(1.1); 
+}
+
+.pl-fav-btn {
+  width: 44px !important; height: 44px !important;
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid var(--pl-border) !important;
+  border-radius: 12px !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  cursor: pointer !important;
+  color: #fff !important;
+  font-size: 1.1rem !important;
+}
+
+.pl-fav-btn.active {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #ef4444 !important;
+}
+
+.pl-fav-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.1) !important; }
+.pl-fav-btn.active:hover { background: rgba(239, 68, 68, 0.2) !important; }
+
+/* Modal Styles */
+#pl-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+}
+
+#pl-modal-overlay.open {
+  display: flex;
+  animation: plFadeIn 0.5s ease forwards;
+}
+
+@keyframes plFadeIn { to { opacity: 1; } }
+
+#pl-modal {
+  background: #0d1117;
+  border: 1px solid var(--pl-border);
+  border-radius: 40px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 92vh;
+  position: relative;
+  overflow-y: auto;
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8);
+  transform: translateY(40px) scale(0.96);
+}
+
+#pl-modal-overlay.open #pl-modal {
+  animation: plModalIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes plModalIn {
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+#pl-modal-close {
+  position: absolute;
+  top: 32px; right: 32px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--pl-border);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+}
+
+#pl-modal-close:hover { background: #ef4444; border-color: #ef4444; transform: rotate(90deg) scale(1.1); }
+
+.pl-modal-content { padding: 64px; }
+@media (max-width: 768px) {
+  .pl-modal-content { padding: 40px 24px; }
+  #pl-modal { border-radius: 0; max-height: 100vh; height: 100vh; }
+  #pl-modal-close { top: 16px; right: 16px; }
+  #pl-header h1 { font-size: 3rem; }
+}
+
+.pl-prompt-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--pl-border);
+  border-radius: 28px;
+  padding: 40px;
+  margin: 40px 0;
+}
+
+#pl-modal-prompt {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: #fff;
+  white-space: pre-wrap;
+}
+
+.pl-btn-large {
+  width: 100%;
+  padding: 22px;
+  background: var(--pl-accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 20px 40px rgba(var(--pl-accent-rgb), 0.4);
+}
+
+.pl-btn-large:hover { transform: translateY(-4px); box-shadow: 0 25px 50px rgba(var(--pl-accent-rgb), 0.5); }
+
+/* Spinner & Load More */
+#pl-spinner { text-align: center; padding: 100px; display: none; }
+.pl-loader {
+  width: 64px; height: 64px;
+  border: 5px solid rgba(var(--pl-accent-rgb), 0.1);
+  border-top-color: var(--pl-accent);
+  border-radius: 50%;
+  animation: plSpin 0.8s linear infinite;
+  margin: 0 auto;
+}
+@keyframes plSpin { to { transform: rotate(360deg); } }
+
+#pl-load-more {
+  padding: 20px 56px;
+  background: transparent;
+  border: 2px solid var(--pl-border);
+  border-radius: 100px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+#pl-load-more:hover { border-color: var(--pl-accent); color: var(--pl-accent); background: rgba(var(--pl-accent-rgb), 0.05); transform: translateY(-4px); }
+
+/* Video Player Styles */
+.pl-video-container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--pl-border);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  background: #000;
+}
+
+.pl-video {
+  width: 100%;
+  display: block;
+}
+</style>
+
+<div id="pl-wrapper">
+  <div id="pl-mesh-bg"></div>
+
+  <div id="pl-header">
+    <h1>Prompt Library</h1>
+    <p>Unlock the full potential of AI with our curated community library. Expertly crafted prompts for every creative need.</p>
+  </div>
+
+  <div id="pl-search-wrap">
+    <input type="text" id="pl-search" placeholder="Search prompts, tools, or topics...">
+  </div>
+
+  <div id="pl-filters">
+    <button class="pl-filter-btn active" data-cat="all">All Collection</button>
+    <button class="pl-filter-btn" data-cat="favs">❤️ My Saved</button>
+    <button class="pl-filter-btn" data-cat="AI Art">🎨 AI Art</button>
+    <button class="pl-filter-btn" data-cat="ChatGPT Prompt">🤖 ChatGPT</button>
+    <button class="pl-filter-btn" data-cat="Photo Editing">📷 Photo Editing</button>
+    <button class="pl-filter-btn" data-cat="Gaming Banner">🎮 Gaming Banner</button>
+    <button class="pl-filter-btn" data-cat="Thumbnail">📺 Thumbnail</button>
+    <button class="pl-filter-btn" data-cat="Content Writing">✍️ Content Writing</button>
+    <button class="pl-filter-btn" data-cat="Marketing">📣 Marketing</button>
+  </div>
+
+  <div id="pl-grid-container">
+    <div id="pl-grid"></div>
+  </div>
+  
+  <div id="pl-empty" style="display:none; text-align: center; padding: 120px 20px;">
+    <span style="font-size: 5rem; display: block; margin-bottom: 24px;">🏜️</span>
+    <h2 style="font-size: 2rem; color: #fff; margin-bottom: 8px;">No Prompts Found</h2>
+    <p style="color: var(--pl-text-dim);">Try adjusting your search or filter to find what you're looking for.</p>
+  </div>
+
+  <div id="pl-spinner">
+    <div class="pl-loader"></div>
+  </div>
+
+  <div style="text-align: center; margin-top: 80px; position: relative; z-index: 10;">
+    <button id="pl-load-more" style="display:none;">Discover More Prompts</button>
+  </div>
+</div>
+
+<!-- Modal Overlay -->
+<div id="pl-modal-overlay">
+  <div id="pl-modal">
+    <button id="pl-modal-close">✕</button>
+    <div class="pl-modal-content">
+      <div id="pl-modal-badges" style="margin-bottom: 24px;"></div>
+      <h2 id="pl-modal-title" style="font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: #fff; margin-bottom: 32px; line-height: 1.1;"></h2>
+      
+      <div id="pl-modal-imgs" style="display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px;"></div>
+      
+      <div class="pl-prompt-box">
+        <div style="font-size: 0.8rem; color: var(--pl-accent); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px;">The Prompt</div>
+        <div id="pl-modal-prompt"></div>
+      </div>
+      
+      <div id="pl-modal-meta" style="display: flex; flex-wrap: wrap; gap: 24px; color: var(--pl-text-dim); font-size: 0.95rem; margin-bottom: 48px; padding: 24px; background: rgba(255,255,255,0.03); border-radius: 20px;"></div>
+      
+      <div style="display:flex; gap:16px;">
+        <button id="pl-modal-fav-btn" class="pl-fav-btn" style="width: 72px !important; height: 72px !important; border-radius: 20px !important; font-size: 1.5rem !important;"></button>
+        <button id="pl-modal-share-btn" class="pl-share-btn" style="width: 72px !important; height: 72px !important; border-radius: 20px !important;">
+           <i class="fa-solid fa-share-nodes"></i>
+        </button>
+        <button id="pl-modal-copy-btn" class="pl-btn-large">📋 Copy Full Prompt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'https://rtmcreator.com/bots/prompt-bot/api.php';
+  let allPrompts = [];
+  let currentPage = 1;
+  let activeFilter = 'all';
+  let searchTerm = '';
+
+  const catIcons = {
+    'AI Art': '🎨',
+    'ChatGPT Prompt': '🤖',
+    'Photo Editing': '📷',
+    'Gaming Banner': '🎮',
+    'Thumbnail': '📺',
+    'Content Writing': '✍️',
+    'Marketing': '📣'
+  };
+
+  function esc(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function escJs(str) {
+    if (!str) return '';
+    return str.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+  }
+
+  async function fetchPrompts(page = 1) {
+    const spinner = document.getElementById('pl-spinner');
+    const loadMore = document.getElementById('pl-load-more');
+    spinner.style.display = 'block';
+    if (page === 1) document.getElementById('pl-grid').innerHTML = '';
+
+    try {
+      const resp = await fetch(`${API_URL}?page=${page}`);
+      const data = await resp.json();
+      
+      if (data.success) {
+        if (page === 1) allPrompts = data.prompts;
+        else allPrompts = [...allPrompts, ...data.prompts];
+
+        renderGrid();
+        loadMore.style.display = (data.prompts.length === 12) ? 'inline-block' : 'none';
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+    } finally {
+      spinner.style.display = 'none';
+    }
+  }
+
+  function renderGrid() {
+    const favs = JSON.parse(localStorage.getItem('pl_favs') || '[]');
+    const filtered = allPrompts.filter(p => {
+      const matchCat = activeFilter === 'all' ? true : (activeFilter === 'favs' ? favs.includes(p.id.toString()) : p.category === activeFilter);
+      const term = searchTerm.toLowerCase();
+      return matchCat && (!term || (p.prompt || '').toLowerCase().includes(term) || (p.category || '').toLowerCase().includes(term));
+    });
+
+    const grid = document.getElementById('pl-grid');
+    grid.innerHTML = '';
+    document.getElementById('pl-empty').style.display = filtered.length === 0 ? 'block' : 'none';
+
+    filtered.forEach((p, idx) => {
+      const card = createCard(p);
+      card.style.animation = `plEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards ${idx * 0.05}s`;
+      card.style.opacity = '0';
+      grid.appendChild(card);
+    });
+  }
+
+  function isFav(id) {
+    const favs = JSON.parse(localStorage.getItem('pl_favs') || '[]');
+    return favs.includes(id.toString());
+  }
+
+  function toggleFav(e, id) {
+    e.stopPropagation();
+    let favs = JSON.parse(localStorage.getItem('pl_favs') || '[]');
+    const idStr = id.toString();
+    if (favs.includes(idStr)) {
+      favs = favs.filter(f => f !== idStr);
+    } else {
+      favs.push(idStr);
+    }
+    localStorage.setItem('pl_favs', JSON.stringify(favs));
+    renderGrid();
+    
+    // If modal is open, update its heart too
+    const modalHeart = document.getElementById('pl-modal-fav-btn');
+    if (modalHeart) {
+      const active = favs.includes(idStr);
+      modalHeart.classList.toggle('active', active);
+      modalHeart.innerHTML = active ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
+    }
+  }
+
+  function createCard(p) {
+    const card = document.createElement('div');
+    card.className = 'pl-card';
+    const icon = catIcons[p.category] || '📁';
+    const thumb = (p.image_urls && p.image_urls.length > 0) ? p.image_urls[0] : '';
+    const activeFav = isFav(p.id);
+    
+    card.innerHTML = `
+      <div class="pl-card-img-wrap">
+        ${thumb ? `<img class="pl-card-img" src="${thumb}" alt="Preview" loading="lazy">` : 
+        `<div style="height:100%; display:flex; align-items:center; justify-content:center; font-size:4.5rem; opacity:0.3;">${icon}</div>`}
+      </div>
+      <div class="pl-card-body">
+        <span class="pl-cat-badge">${icon} ${p.category}</span>
+        <h3 class="pl-card-title">${esc(p.text_output || p.category + ' Prompt')}</h3>
+        <p class="pl-card-preview">${esc(p.prompt)}</p>
+        <div class="pl-card-footer" style="justify-content: flex-end;">
+          <div class="pl-btn-group">
+            <button class="pl-fav-btn ${activeFav ? 'active' : ''}" onclick="toggleFav(event, \`${p.id}\`)" title="Save Prompt">
+              <i class="${activeFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+            </button>
+            <button class="pl-share-btn" onclick="plShare(event, \`${escJs(p.prompt.substring(0, 100))}\`, \`${p.id}\`)" title="Share Prompt">
+              <i class="fa-solid fa-share-nodes"></i>
+            </button>
+            <button class="pl-copy-btn" onclick="plCopy(event, this, \`${escJs(p.prompt)}\`)">📋 Copy</button>
+          </div>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', (e) => { if (!e.target.closest('button')) openModal(p); });
+    return card;
+  }
+
+  function openModal(p) {
+    const overlay = document.getElementById('pl-modal-overlay');
+    const imgsEl = document.getElementById('pl-modal-imgs');
+    const icon = catIcons[p.category] || '📁';
+    const imgs = p.image_urls || [];
+    const activeFav = isFav(p.id);
+
+    if (p.video_url) {
+      imgsEl.innerHTML = `
+        <div class="pl-video-container">
+          <video class="pl-video" controls poster="${imgs[0] || ''}">
+            <source src="${p.video_url}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      `;
+    } else {
+      imgsEl.innerHTML = imgs.map(src => `<div style="text-align:center;"><img src="${src}" style="width:100%; max-width:600px; border-radius:24px; border:1px solid var(--pl-border); box-shadow: 0 10px 30px rgba(0,0,0,0.3);"></div>`).join('');
+    }
+    
+    document.getElementById('pl-modal-badges').innerHTML = `<span class="pl-cat-badge">${icon} ${esc(p.category)}</span>`;
+    document.getElementById('pl-modal-title').textContent = p.text_output || `${p.category} Prompt`;
+    document.getElementById('pl-modal-prompt').textContent = p.prompt;
+    
+    const copyBtn = document.getElementById('pl-modal-copy-btn');
+    copyBtn.onclick = (e) => plCopy(e, copyBtn, p.prompt, '📋 Copy Full Prompt');
+
+    const shareBtn = document.getElementById('pl-modal-share-btn');
+    shareBtn.onclick = (e) => plShare(e, p.prompt.substring(0, 100), p.id);
+    
+    const favBtn = document.getElementById('pl-modal-fav-btn');
+    favBtn.onclick = (e) => toggleFav(e, p.id);
+    favBtn.classList.toggle('active', activeFav);
+    favBtn.innerHTML = activeFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
+    
+    document.getElementById('pl-modal-meta').innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px;">🆔 ID: <strong style="color:#fff;">#${p.id}</strong></div>
+      <div style="display:flex; align-items:center; gap:8px;">👤 Creator: <strong style="color:#fff;">${esc(p.username || 'Anonymous')}</strong></div>
+      <div style="display:flex; align-items:center; gap:8px;">📅 ${new Date(p.created_at).toLocaleDateString()}</div>
+    `;
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function plCopy(e, btn, text, originalText = '📋 Copy') {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✅ Copied!';
+      btn.style.background = '#10b981';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+      }, 2000);
+    });
+  }
+
+  function plShare(e, text, id) {
+    e.stopPropagation();
+    const shareData = {
+      title: 'Awesome Prompt',
+      text: text,
+      url: window.location.href + '?id=' + id
+    };
+    if (navigator.share) {
+      navigator.share(shareData);
+    } else {
+      navigator.clipboard.writeText(shareData.url);
+      alert('Link copied to clipboard!');
+    }
+  }
+
+  document.getElementById('pl-modal-close').addEventListener('click', () => {
+    document.getElementById('pl-modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
+  document.getElementById('pl-modal-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('pl-modal-overlay')) {
+      document.getElementById('pl-modal-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.getElementById('pl-search').addEventListener('input', (e) => {
+    searchTerm = e.target.value;
+    renderGrid();
+  });
+
+  document.querySelectorAll('.pl-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pl-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.cat;
+      renderGrid();
+    });
+  });
+
+  document.getElementById('pl-load-more').addEventListener('click', () => {
+    currentPage++;
+    fetchPrompts(currentPage);
+  });
+
+  // Initial Fetch
+  fetchPrompts();
+</script>
+
+<style>
+@keyframes plEntrance {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>

@@ -1,0 +1,54 @@
+﻿name: Build Release APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        working-directory: prompt_library_app
+        run: flutter pub get
+
+      - name: Build Universal Release APK
+        working-directory: prompt_library_app
+        run: flutter build apk --release
+
+      - name: Build Split-per-ABI APKs (arm64, armeabi-v7a, x86_64)
+        working-directory: prompt_library_app
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload Universal APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Prompt-Hub-Universal-APK
+          path: prompt_library_app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Split ABI APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Prompt-Hub-Split-APKs
+          path: prompt_library_app/build/app/outputs/flutter-apk/*release*.apk

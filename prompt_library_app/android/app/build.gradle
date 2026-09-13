@@ -1,0 +1,57 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace = "com.rtmcreator.promptlibrary"
+    compileSdk = 35
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    defaultConfig {
+        applicationId = "com.rtmcreator.promptlibrary"
+        minSdk = 21
+        targetSdk = 35
+        versionCode = 3
+        versionName = "1.0.2"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias = keystoreProperties['keyAlias'] ?: 'upload'
+            keyPassword = keystoreProperties['keyPassword'] ?: 'promptbot123'
+            storeFile = keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : file('upload-keystore.jks')
+            storePassword = keystoreProperties['storePassword'] ?: 'promptbot123'
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}

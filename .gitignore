@@ -1,0 +1,11 @@
+﻿*.apk
+*.zip
+*.tar.gz
+prompt_library_app/build/
+prompt_library_app/.dart_tool/
+prompt_library_app/.flutter-plugins
+prompt_library_app/.flutter-plugins-dependencies
+prompt_library_app/.pub/
+prompt_library_app/.pub-cache/
+.vscode/
+.idea/
