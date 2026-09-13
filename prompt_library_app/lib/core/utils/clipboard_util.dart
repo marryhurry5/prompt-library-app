@@ -82,7 +82,7 @@ class ClipboardUtil {
                   Text(
                     statusSubtitle,
                     style: TextStyle(
-                      color: isPro ? AppColors.accent : AppColors.textSecondary,
+                      color: isPro ? AppColors.primaryAccent : AppColors.textSecondary,
                       fontSize: 11.5,
                       fontWeight: isPro ? FontWeight.bold : FontWeight.normal,
                     ),

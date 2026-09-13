@@ -4,6 +4,7 @@ class AppColors {
   // Primary Palette
   static const Color primary = Color(0xFF6C5CE7); // Deep Vibrant Purple
   static const Color primaryAccent = Color(0xFFA29BFE);
+  static const Color accent = Color(0xFFA29BFE); // Alias for primaryAccent
   static const Color secondary = Color(0xFF00B894); // Emerald Green Accent
   
   // Background Colors (Dark Mode First)

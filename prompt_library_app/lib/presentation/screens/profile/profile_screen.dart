@@ -43,7 +43,7 @@ class ProfileScreen extends StatelessWidget {
               Uri.parse('https://rtmcreator.com/bots/prompt-bot/privacy.php'),
               mode: LaunchMode.externalApplication,
             ),
-            child: const Text('View Online', style: TextStyle(color: AppColors.accent)),
+            child: const Text('View Online', style: TextStyle(color: AppColors.primaryAccent)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
