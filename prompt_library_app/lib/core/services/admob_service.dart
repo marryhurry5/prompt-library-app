@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../constants/admob_ids.dart';
-import '../../presentation/widgets/test_ad_dialog.dart';
+import '../constants/app_colors.dart';
 
 class AdMobService {
   RewardedAd? _rewardedAd;
@@ -13,7 +12,7 @@ class AdMobService {
   bool get isAdLoaded => _rewardedAd != null;
   bool get isAdLoading => _isAdLoading;
 
-  /// Loads Google AdMob Rewarded Ad with automatic retry logic
+  /// Loads Google AdMob Live Rewarded Ad with automatic retry logic
   void loadRewardedAd({VoidCallback? onAdLoaded, Function(String)? onAdFailed}) {
     if (_isAdLoading || _rewardedAd != null) return;
 
@@ -27,13 +26,13 @@ class AdMobService {
           _rewardedAd = ad;
           _isAdLoading = false;
           _retryCount = 0;
-          debugPrint('[AdMob] Rewarded Ad loaded successfully.');
+          debugPrint('[AdMob] Live Rewarded Ad loaded successfully.');
           if (onAdLoaded != null) onAdLoaded();
         },
         onAdFailedToLoad: (LoadAdError error) {
           _rewardedAd = null;
           _isAdLoading = false;
-          debugPrint('[AdMob] Rewarded Ad failed to load (attempt ${_retryCount + 1}): ${error.message}');
+          debugPrint('[AdMob] Live Rewarded Ad failed to load (attempt ${_retryCount + 1}): ${error.message} (code: ${error.code})');
           
           if (_retryCount < _maxRetries) {
             _retryCount++;
@@ -48,9 +47,8 @@ class AdMobService {
     );
   }
 
-  /// Displays Google AdMob Test Rewarded Ad, or falls back to full-screen TestAdDialog.
-  /// Guaranteed: Content will NEVER unlock directly without showing a 5-second test ad.
-  void showRewardedAdWithGuaranteedDisplay({
+  /// Displays the Live Rewarded Ad and invokes [onRewardEarned] upon user completing the ad
+  void showRewardedAd({
     required BuildContext context,
     required VoidCallback onRewardEarned,
     VoidCallback? onAdDismissed,
@@ -66,17 +64,19 @@ class AdMobService {
             onRewardEarned();
           }
           if (onAdDismissed != null) onAdDismissed();
-          loadRewardedAd(); // Preload next test ad
+          loadRewardedAd(); // Preload next live ad
         },
         onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
           ad.dispose();
           _rewardedAd = null;
-          debugPrint('[AdMob] Failed to display ad: ${error.message}. Launching Test Ad Dialog.');
+          debugPrint('[AdMob] Live Ad failed to show: ${error.message}');
+          if (onAdDismissed != null) onAdDismissed();
           if (context.mounted) {
-            TestAdDialog.show(
-              context,
-              onRewardEarned: onRewardEarned,
-              onDismissed: onAdDismissed,
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Ad display error: ${error.message}. Please try again.'),
+                backgroundColor: AppColors.surface,
+              ),
             );
           }
           loadRewardedAd();
@@ -85,69 +85,66 @@ class AdMobService {
 
       _rewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          debugPrint('[AdMob] Reward verified! Type: ${reward.type}, Amount: ${reward.amount}');
+          debugPrint('[AdMob] User completed rewarded ad! Type: ${reward.type}, Amount: ${reward.amount}');
           rewardEarned = true;
         },
       );
     } else {
-      // If AdMob SDK is not preloaded yet or device is offline, open the 5-sec interactive Test Ad Dialog
-      debugPrint('[AdMob] Preloaded ad not found. Launching guaranteed 5-second Test Ad Dialog.');
-      if (context.mounted) {
-        TestAdDialog.show(
-          context,
-          onRewardEarned: onRewardEarned,
-          onDismissed: onAdDismissed,
-        );
-      }
-      loadRewardedAd(); // Preload for next time
-    }
-  }
-
-  /// Legacy showRewardedAd with safe fallback to avoid direct unlock
-  void showRewardedAd({
-    required VoidCallback onRewardEarned,
-    VoidCallback? onAdDismissed,
-    Function(String)? onError,
-    BuildContext? context,
-  }) {
-    if (context != null) {
-      showRewardedAdWithGuaranteedDisplay(
-        context: context,
-        onRewardEarned: onRewardEarned,
-        onAdDismissed: onAdDismissed,
+      // Ad is still fetching or not ready yet
+      debugPrint('[AdMob] Live ad not ready yet. Attempting immediate fetch...');
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryAccent),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Loading live ad from Google AdMob... Tap again in a moment.',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          backgroundColor: AppColors.surface,
+        ),
       );
-      return;
+
+      loadRewardedAd(
+        onAdLoaded: () {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Live Ad is ready! Tap "Watch Ad" to view.'),
+                duration: Duration(seconds: 2),
+                backgroundColor: AppColors.unlocked,
+              ),
+            );
+          }
+        },
+        onAdFailed: (error) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Could not load live ad: $error. Please check connection.'),
+                duration: const Duration(seconds: 3),
+                backgroundColor: AppColors.surface,
+              ),
+            );
+          }
+        },
+      );
+
+      if (onAdDismissed != null) onAdDismissed();
     }
-
-    if (_rewardedAd == null) {
-      debugPrint('[AdMob] Warning: Ad not ready and no context provided for test ad dialog.');
-      if (onError != null) onError('Test ad not ready. Please try again.');
-      loadRewardedAd();
-      return;
-    }
-
-    bool earned = false;
-    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdDismissedFullScreenContent: (RewardedAd ad) {
-        ad.dispose();
-        _rewardedAd = null;
-        if (earned) onRewardEarned();
-        if (onAdDismissed != null) onAdDismissed();
-        loadRewardedAd();
-      },
-      onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
-        ad.dispose();
-        _rewardedAd = null;
-        debugPrint('[AdMob] Failed to show ad: ${error.message}');
-        if (onError != null) onError(error.message);
-      },
-    );
-
-    _rewardedAd!.show(
-      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-        earned = true;
-      },
-    );
   }
 
   /// Helper to create and load a standard Banner Ad

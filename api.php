@@ -19,7 +19,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'version_check') {
         'min_supported_version' => '1.0.0',
         'force_update' => false,
         'update_url' => BOT_BASE_URL . 'api.php?action=download_apk',
-        'release_notes' => 'Guaranteed Google AdMob Test Ads, 5-Sec Ad Simulator, & Ad-Free PRO Updates!'
+        'release_notes' => 'Official Google Play Store Production Release with Live AdMob Ads & Performance Upgrades!'
     ]);
     exit;
 }

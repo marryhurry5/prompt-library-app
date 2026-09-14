@@ -182,7 +182,7 @@ class CopyLimitService {
                           : () {
                               setState(() => isLoadingAd = true);
                               final adService = AdMobService();
-                              adService.showRewardedAdWithGuaranteedDisplay(
+                              adService.showRewardedAd(
                                 context: dialogContext,
                                 onRewardEarned: () async {
                                   await grant24HourPass();

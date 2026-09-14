@@ -1,4 +1,4 @@
-﻿name: Build Release APK
+name: Build Release APK
 
 on:
   push:
@@ -41,6 +41,10 @@ jobs:
         working-directory: prompt_library_app
         run: flutter build apk --release --split-per-abi
 
+      - name: Build Google Play Store App Bundle (.aab)
+        working-directory: prompt_library_app
+        run: flutter build appbundle --release
+
       - name: Upload Universal APK Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -52,3 +56,9 @@ jobs:
         with:
           name: AI-Prompt-Hub-Split-APKs
           path: prompt_library_app/build/app/outputs/flutter-apk/*release*.apk
+
+      - name: Upload Play Store AAB Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Prompt-Hub-PlayStore-AAB
+          path: prompt_library_app/build/app/outputs/bundle/release/app-release.aab

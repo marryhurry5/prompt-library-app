@@ -44,7 +44,7 @@ class _PromptDetailsScreenState extends State<PromptDetailsScreen> {
   void _watchAdToUnlock() {
     setState(() => _isAdLoading = true);
 
-    _adMobService.showRewardedAdWithGuaranteedDisplay(
+    _adMobService.showRewardedAd(
       context: context,
       onRewardEarned: () {
         if (mounted) {

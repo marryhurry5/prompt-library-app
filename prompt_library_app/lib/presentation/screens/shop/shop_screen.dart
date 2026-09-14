@@ -121,7 +121,7 @@ class _ShopScreenState extends State<ShopScreen> {
   void _watchAdToUnlock(ShopItemModel item) {
     setState(() => _isAdLoading = true);
 
-    _adMobService.showRewardedAdWithGuaranteedDisplay(
+    _adMobService.showRewardedAd(
       context: context,
       onRewardEarned: () {
         if (mounted) {
