@@ -19,7 +19,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'version_check') {
         'min_supported_version' => '1.0.0',
         'force_update' => false,
         'update_url' => BOT_BASE_URL . 'api.php?action=download_apk',
-        'release_notes' => 'Dynamic Categories, 10-Tx History, & Performance Fixes!'
+        'release_notes' => 'Frosted Glass Dock, 1-Tap Quick Copy, Trending Feed, 4K Image Zoom & UPI PRO!'
     ]);
     exit;
 }
