@@ -182,37 +182,22 @@ class CopyLimitService {
                           : () {
                               setState(() => isLoadingAd = true);
                               final adService = AdMobService();
-                              adService.loadRewardedAd(
-                                onAdLoaded: () {
-                                  adService.showRewardedAd(
-                                    onRewardEarned: () async {
-                                      await grant24HourPass();
-                                      if (ctx.mounted) Navigator.pop(ctx);
-                                      onUnlocked();
-                                      HapticFeedback.mediumImpact();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('🎉 24-Hour Unlimited Copies Unlocked!'),
-                                          backgroundColor: AppColors.unlocked,
-                                        ),
-                                      );
-                                    },
-                                    onAdDismissed: () {
-                                      if (dialogContext.mounted) setState(() => isLoadingAd = false);
-                                    },
-                                    onError: (err) async {
-                                      // Graceful fallback: grant unlock if ad network fails
-                                      await grant24HourPass();
-                                      if (ctx.mounted) Navigator.pop(ctx);
-                                      onUnlocked();
-                                    },
-                                  );
-                                },
-                                onAdFailed: (err) async {
-                                  // Graceful fallback
+                              adService.showRewardedAdWithGuaranteedDisplay(
+                                context: dialogContext,
+                                onRewardEarned: () async {
                                   await grant24HourPass();
                                   if (ctx.mounted) Navigator.pop(ctx);
                                   onUnlocked();
+                                  HapticFeedback.mediumImpact();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('🎉 24-Hour Unlimited Copies Unlocked!'),
+                                      backgroundColor: AppColors.unlocked,
+                                    ),
+                                  );
+                                },
+                                onAdDismissed: () {
+                                  if (dialogContext.mounted) setState(() => isLoadingAd = false);
                                 },
                               );
                             },

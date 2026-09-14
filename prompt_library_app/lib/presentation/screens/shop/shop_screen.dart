@@ -121,7 +121,8 @@ class _ShopScreenState extends State<ShopScreen> {
   void _watchAdToUnlock(ShopItemModel item) {
     setState(() => _isAdLoading = true);
 
-    _adMobService.showRewardedAd(
+    _adMobService.showRewardedAdWithGuaranteedDisplay(
+      context: context,
       onRewardEarned: () {
         if (mounted) {
           setState(() => _isAdLoading = false);
@@ -132,7 +133,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 children: const [
                   Icon(Icons.check_circle_rounded, color: AppColors.unlocked, size: 20),
                   SizedBox(width: 10),
-                  Text('Bundle unlocked! Tap to open access link.'),
+                  Text('🎉 Bundle unlocked! Tap to open access link.'),
                 ],
               ),
               backgroundColor: AppColors.surfaceLight,
@@ -142,12 +143,6 @@ class _ShopScreenState extends State<ShopScreen> {
       },
       onAdDismissed: () {
         if (mounted) setState(() => _isAdLoading = false);
-      },
-      onError: (error) {
-        if (mounted) {
-          setState(() => _isAdLoading = false);
-          context.read<ShopProvider>().unlockItem(item.id);
-        }
       },
     );
   }

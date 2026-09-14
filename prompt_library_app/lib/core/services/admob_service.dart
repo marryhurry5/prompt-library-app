@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../constants/admob_ids.dart';
+import '../../presentation/widgets/test_ad_dialog.dart';
 
 class AdMobService {
   RewardedAd? _rewardedAd;
@@ -46,39 +48,104 @@ class AdMobService {
     );
   }
 
-  /// Displays the Rewarded Ad and invokes [onRewardEarned] upon successful completion
+  /// Displays Google AdMob Test Rewarded Ad, or falls back to full-screen TestAdDialog.
+  /// Guaranteed: Content will NEVER unlock directly without showing a 5-second test ad.
+  void showRewardedAdWithGuaranteedDisplay({
+    required BuildContext context,
+    required VoidCallback onRewardEarned,
+    VoidCallback? onAdDismissed,
+  }) {
+    if (_rewardedAd != null) {
+      bool rewardEarned = false;
+
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (RewardedAd ad) {
+          ad.dispose();
+          _rewardedAd = null;
+          if (rewardEarned) {
+            onRewardEarned();
+          }
+          if (onAdDismissed != null) onAdDismissed();
+          loadRewardedAd(); // Preload next test ad
+        },
+        onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
+          ad.dispose();
+          _rewardedAd = null;
+          debugPrint('[AdMob] Failed to display ad: ${error.message}. Launching Test Ad Dialog.');
+          if (context.mounted) {
+            TestAdDialog.show(
+              context,
+              onRewardEarned: onRewardEarned,
+              onDismissed: onAdDismissed,
+            );
+          }
+          loadRewardedAd();
+        },
+      );
+
+      _rewardedAd!.show(
+        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+          debugPrint('[AdMob] Reward verified! Type: ${reward.type}, Amount: ${reward.amount}');
+          rewardEarned = true;
+        },
+      );
+    } else {
+      // If AdMob SDK is not preloaded yet or device is offline, open the 5-sec interactive Test Ad Dialog
+      debugPrint('[AdMob] Preloaded ad not found. Launching guaranteed 5-second Test Ad Dialog.');
+      if (context.mounted) {
+        TestAdDialog.show(
+          context,
+          onRewardEarned: onRewardEarned,
+          onDismissed: onAdDismissed,
+        );
+      }
+      loadRewardedAd(); // Preload for next time
+    }
+  }
+
+  /// Legacy showRewardedAd with safe fallback to avoid direct unlock
   void showRewardedAd({
     required VoidCallback onRewardEarned,
     VoidCallback? onAdDismissed,
     Function(String)? onError,
+    BuildContext? context,
   }) {
-    if (_rewardedAd == null) {
-      // Fallback: If ad isn't ready or fails to load, gracefully notify or grant reward
-      debugPrint('[AdMob] Ad not ready. Executing fallback reward.');
-      onRewardEarned();
+    if (context != null) {
+      showRewardedAdWithGuaranteedDisplay(
+        context: context,
+        onRewardEarned: onRewardEarned,
+        onAdDismissed: onAdDismissed,
+      );
       return;
     }
 
+    if (_rewardedAd == null) {
+      debugPrint('[AdMob] Warning: Ad not ready and no context provided for test ad dialog.');
+      if (onError != null) onError('Test ad not ready. Please try again.');
+      loadRewardedAd();
+      return;
+    }
+
+    bool earned = false;
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (RewardedAd ad) {
         ad.dispose();
         _rewardedAd = null;
+        if (earned) onRewardEarned();
         if (onAdDismissed != null) onAdDismissed();
-        loadRewardedAd(); // Preload next ad
+        loadRewardedAd();
       },
       onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
         ad.dispose();
         _rewardedAd = null;
         debugPrint('[AdMob] Failed to show ad: ${error.message}');
         if (onError != null) onError(error.message);
-        onRewardEarned(); // Grant unlock on ad error fallback
       },
     );
 
     _rewardedAd!.show(
       onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-        debugPrint('[AdMob] User successfully completed Rewarded Ad! Type: ${reward.type}, Amount: ${reward.amount}');
-        onRewardEarned();
+        earned = true;
       },
     );
   }

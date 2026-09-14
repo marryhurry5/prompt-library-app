@@ -44,7 +44,8 @@ class _PromptDetailsScreenState extends State<PromptDetailsScreen> {
   void _watchAdToUnlock() {
     setState(() => _isAdLoading = true);
 
-    _adMobService.showRewardedAd(
+    _adMobService.showRewardedAdWithGuaranteedDisplay(
+      context: context,
       onRewardEarned: () {
         if (mounted) {
           setState(() => _isAdLoading = false);
@@ -55,7 +56,7 @@ class _PromptDetailsScreenState extends State<PromptDetailsScreen> {
                 children: const [
                   Icon(Icons.lock_open_rounded, color: AppColors.unlocked, size: 20),
                   SizedBox(width: 10),
-                  Text('Prompt unlocked successfully!'),
+                  Text('🎉 Prompt unlocked successfully!'),
                 ],
               ),
               backgroundColor: AppColors.surfaceLight,
@@ -65,15 +66,6 @@ class _PromptDetailsScreenState extends State<PromptDetailsScreen> {
       },
       onAdDismissed: () {
         if (mounted) setState(() => _isAdLoading = false);
-      },
-      onError: (error) {
-        if (mounted) {
-          setState(() => _isAdLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ad notice: Unlocking prompt... ($error)')),
-          );
-          context.read<PromptProvider>().unlockPrompt(widget.prompt.id);
-        }
       },
     );
   }

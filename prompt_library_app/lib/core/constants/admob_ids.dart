@@ -1,9 +1,9 @@
 import 'dart:io';
 
 class AdMobIds {
-  // Production Google AdMob Rewarded Ad Unit ID
-  static const String _androidTestRewardedId = 'ca-app-pub-5860757655925932/6312549441';
-  static const String _iosTestRewardedId = 'ca-app-pub-5860757655925932/6312549441';
+  // Official Google AdMob Test Rewarded Ad Unit IDs
+  static const String _androidTestRewardedId = 'ca-app-pub-3940256099942544/5224354917';
+  static const String _iosTestRewardedId = 'ca-app-pub-3940256099942544/1712485313';
 
   // Google AdMob Test Banner Ad Unit IDs
   static const String _androidTestBannerId = 'ca-app-pub-3940256099942544/6300978111';

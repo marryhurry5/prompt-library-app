@@ -15,11 +15,11 @@ if (!defined('BOT_BASE_URL')) {
 if (isset($_GET['action']) && $_GET['action'] === 'version_check') {
     echo json_encode([
         'success' => true,
-        'latest_version' => '1.0.2',
+        'latest_version' => '1.0.3',
         'min_supported_version' => '1.0.0',
         'force_update' => false,
         'update_url' => BOT_BASE_URL . 'api.php?action=download_apk',
-        'release_notes' => 'Frosted Glass Dock, 1-Tap Quick Copy, Trending Feed, 4K Image Zoom & UPI PRO!'
+        'release_notes' => 'Guaranteed Google AdMob Test Ads, 5-Sec Ad Simulator, & Ad-Free PRO Updates!'
     ]);
     exit;
 }
@@ -27,6 +27,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'version_check') {
 // Direct Download Endpoint for APK with proper Android Package Installer headers
 if (isset($_GET['action']) && $_GET['action'] === 'download_apk') {
     $possible_paths = [
+        dirname(__FILE__) . '/PromptLibrary_v1.0.3_Release.apk',
         dirname(__FILE__) . '/PromptLibrary_v1.0.2_Release.apk',
         dirname(__FILE__) . '/PromptLibrary_v1.0.1_Universal.apk',
         dirname(__FILE__) . '/app-release.apk',
@@ -42,7 +43,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'download_apk') {
     if ($apk_path && file_exists($apk_path)) {
         header('Content-Description: File Transfer');
         header('Content-Type: application/vnd.android.package-archive');
-        header('Content-Disposition: attachment; filename="AI_Prompt_Hub_v1.0.2.apk"');
+        header('Content-Disposition: attachment; filename="AI_Prompt_Hub_v1.0.3.apk"');
         header('Content-Length: ' . filesize($apk_path));
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
