@@ -8,7 +8,6 @@ import '../../../core/services/update_service.dart';
 import '../../../core/services/url_service.dart';
 import '../../../data/models/category_model.dart';
 import '../../../logic/providers/prompt_provider.dart';
-import '../../widgets/banner_ad_widget.dart';
 import '../../widgets/prompt_card.dart';
 import '../../widgets/shimmer_skeleton_card.dart';
 import '../categories/categories_screen.dart';
@@ -578,13 +577,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 110)),
+            const SliverToBoxAdapter(child: SizedBox(height: 140)),
           ],
         ),
       ),
-
-      // 6. Sticky Bottom Banner Ad
-      bottomNavigationBar: const BannerAdWidget(),
 
       // 7. Floating Action Button: Redirect to Telegram Bot for Prompt Submission
       floatingActionButton: FloatingActionButton.extended(

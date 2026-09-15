@@ -59,7 +59,12 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     return Container(
       width: double.infinity,
       height: _bannerAd!.size.height.toDouble(),
-      color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: AppColors.surface.withOpacity(0.95),
+        border: Border(
+          top: BorderSide(color: Colors.white.withOpacity(0.08), width: 0.8),
+        ),
+      ),
       alignment: Alignment.center,
       child: AdWidget(ad: _bannerAd!),
     );

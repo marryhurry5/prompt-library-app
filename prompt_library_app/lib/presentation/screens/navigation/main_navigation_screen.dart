@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/constants/app_colors.dart';
@@ -6,6 +6,7 @@ import '../favorites/favorites_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../shop/shop_screen.dart';
+import '../../widgets/banner_ad_widget.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -34,42 +35,53 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         children: _screens,
       ),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                height: 62,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surface.withOpacity(0.85),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.12),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 1. Sticky Banner Ad positioned cleanly above navigation dock (Zero overlap!)
+            const BannerAdWidget(),
+            const SizedBox(height: 4),
+
+            // 2. Floating Frosted-Glass Bottom Navigation Dock
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    height: 62,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withOpacity(0.85),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.12),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(0, Icons.home_rounded, 'Home', AppColors.primary),
-                    _buildNavItem(1, Icons.shopping_bag_rounded, 'Shop', AppColors.primaryAccent),
-                    _buildNavItem(2, Icons.favorite_rounded, 'Favorites', Colors.redAccent),
-                    _buildNavItem(3, Icons.person_rounded, 'Profile', AppColors.unlocked),
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildNavItem(0, Icons.home_rounded, 'Home', AppColors.primary),
+                        _buildNavItem(1, Icons.shopping_bag_rounded, 'Shop', AppColors.primaryAccent),
+                        _buildNavItem(2, Icons.favorite_rounded, 'Favorites', Colors.redAccent),
+                        _buildNavItem(3, Icons.person_rounded, 'Profile', AppColors.unlocked),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
