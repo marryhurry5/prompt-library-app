@@ -377,6 +377,225 @@
 .pl-fav-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.1) !important; }
 .pl-fav-btn.active:hover { background: rgba(239, 68, 68, 0.2) !important; }
 
+/* ==========================================================================
+   FLOATING TELEGRAM BOT POPUP BANNER (PREMIUM MODERN DESIGN)
+   ========================================================================== */
+.pl-tg-banner {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9998;
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.94) 0%, rgba(13, 17, 30, 0.97) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 14px 44px 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 
+    0 16px 40px -8px rgba(0, 0, 0, 0.75), 
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 8px 24px -4px rgba(124, 58, 237, 0.25);
+  animation: plSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 460px;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+.pl-tg-banner.pl-banner-hiding {
+  opacity: 0 !important;
+  transform: translateY(18px) scale(0.96) !important;
+  pointer-events: none;
+}
+@keyframes plSlideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Icon badge with Telegram brand styling & live dot */
+.pl-tg-banner-icon-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.pl-tg-banner-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(34, 158, 217, 0.18) 0%, rgba(124, 58, 237, 0.25) 100%);
+  border: 1px solid rgba(34, 158, 217, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #29b6f6;
+  font-size: 1.45rem;
+  box-shadow: 0 4px 14px rgba(34, 158, 217, 0.22);
+  transition: transform 0.2s;
+}
+.pl-tg-banner:hover .pl-tg-banner-icon {
+  transform: scale(1.05);
+}
+.pl-tg-live-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background: #10b981;
+  border: 2px solid #0f1423;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+  animation: plPulseDot 2s infinite;
+}
+@keyframes plPulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.75; }
+}
+
+/* Text details */
+.pl-tg-banner-content {
+  flex: 1;
+  min-width: 0;
+}
+.pl-tg-banner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a78bfa;
+  margin-bottom: 2px;
+  line-height: 1;
+}
+.pl-tg-banner-title {
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-tg-banner-desc {
+  color: #94a3b8;
+  font-size: 0.77rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-tg-accent {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+/* Modern action button */
+.pl-tg-banner-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.84rem;
+  padding: 9px 15px;
+  border-radius: 12px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+.pl-tg-banner-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.55);
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  color: #ffffff !important;
+}
+.pl-tg-banner-btn i {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+.pl-tg-banner-btn:hover i {
+  transform: translateX(3px);
+}
+
+/* Close button nestled gracefully in top-right */
+.pl-tg-banner-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.72rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+  outline: none;
+}
+.pl-tg-banner-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  transform: rotate(90deg) scale(1.08);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .pl-tg-banner {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    max-width: none;
+    width: auto;
+    padding: 12px 34px 12px 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+  .pl-tg-banner-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.25rem;
+    border-radius: 11px;
+  }
+  .pl-tg-banner-tag {
+    font-size: 0.6rem;
+  }
+  .pl-tg-banner-title {
+    font-size: 0.86rem;
+  }
+  .pl-tg-banner-desc {
+    font-size: 0.7rem;
+  }
+  .pl-tg-banner-btn {
+    padding: 8px 12px;
+    font-size: 0.76rem;
+    border-radius: 10px;
+    gap: 5px;
+  }
+  .pl-tg-banner-close {
+    top: 7px;
+    right: 7px;
+    width: 22px;
+    height: 22px;
+    font-size: 0.68rem;
+  }
+}
+
 /* Modal Styles */
 #pl-modal-overlay {
   position: fixed;
@@ -1392,6 +1611,51 @@
 
   // Initial Fetch
   fetchPrompts();
+</script>
+
+<!-- FLOATING TELEGRAM BOT POPUP BANNER (PREMIUM REDESIGN) -->
+<div id="pl-tg-banner" class="pl-tg-banner" role="complementary" aria-label="Telegram Bot Announcement">
+  <button class="pl-tg-banner-close" onclick="dismissTgBanner()" title="Close notification" aria-label="Close">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+  
+  <div class="pl-tg-banner-icon-wrap">
+    <div class="pl-tg-banner-icon">
+      <i class="fa-brands fa-telegram"></i>
+    </div>
+    <span class="pl-tg-live-dot" title="Active creator rewards"></span>
+  </div>
+  
+  <div class="pl-tg-banner-content">
+    <div class="pl-tg-banner-tag">
+      <i class="fa-solid fa-bolt"></i> CREATOR PROGRAM
+    </div>
+    <div class="pl-tg-banner-title">Submit Prompts &amp; Earn Cash</div>
+    <div class="pl-tg-banner-desc">Get <strong class="pl-tg-accent">₹0.50 – ₹1.00</strong> per prompt + daily rewards</div>
+  </div>
+  
+  <a href="https://t.me/Prompts_library_bot" target="_blank" rel="noopener" class="pl-tg-banner-btn">
+    <span>Open Bot</span>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<script>
+function dismissTgBanner() {
+  const banner = document.getElementById('pl-tg-banner');
+  if (!banner) return;
+  banner.classList.add('pl-banner-hiding');
+  setTimeout(() => { banner.style.display = 'none'; }, 320);
+  try { sessionStorage.setItem('pl_tg_dismissed', '1'); } catch(e){}
+}
+(function() {
+  try {
+    if (sessionStorage.getItem('pl_tg_dismissed') === '1') {
+      const b = document.getElementById('pl-tg-banner');
+      if (b) b.style.display = 'none';
+    }
+  } catch(e){}
+})();
 </script>
 
 <style>
