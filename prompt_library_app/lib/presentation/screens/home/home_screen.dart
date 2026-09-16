@@ -577,32 +577,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 140)),
+            const SliverToBoxAdapter(child: SizedBox(height: 160)),
           ],
         ),
       ),
 
       // 7. Floating Action Button: Redirect to Telegram Bot for Prompt Submission
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        elevation: 6,
-        onPressed: () async {
-          try {
-            await UrlService.openTelegramBot();
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Could not open Telegram Bot: $e')),
-              );
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 125.0),
+        child: FloatingActionButton.extended(
+          backgroundColor: AppColors.primary,
+          elevation: 6,
+          onPressed: () async {
+            try {
+              await UrlService.openTelegramBot();
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Could not open Telegram Bot: $e')),
+                );
+              }
             }
-          }
-        },
-        icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-        label: const Text(
-          'Submit Prompt & Earn Money 💰',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+          },
+          icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+          label: const Text(
+            'Submit Prompt & Earn Money 💰',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+          ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
