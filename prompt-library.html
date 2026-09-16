@@ -402,76 +402,372 @@
 #pl-modal {
   background: #0d1117;
   border: 1px solid var(--pl-border);
-  border-radius: 40px;
+  border-radius: 28px;
   width: 100%;
   max-width: 860px;
-  max-height: 92vh;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   position: relative;
-  overflow-y: auto;
-  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8);
-  transform: translateY(40px) scale(0.96);
+  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(139, 92, 246, 0.15);
+  box-sizing: border-box;
 }
 
 #pl-modal-overlay.open #pl-modal {
-  animation: plModalIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: plModalPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes plModalIn {
-  to { transform: translateY(0) scale(1); opacity: 1; }
+@keyframes plModalPop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.pl-modal-header {
+  padding: 16px 24px 12px;
+  background: #0d1117;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  z-index: 5;
+}
+.pl-modal-drag-pill { display: none; }
+.pl-modal-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+#pl-modal-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 #pl-modal-close {
-  position: absolute;
-  top: 32px; right: 32px;
-  width: 52px; height: 52px;
+  width: 38px; height: 38px;
+  min-width: 38px; min-height: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: rgba(255,255,255,0.08);
-  border: 1px solid var(--pl-border);
+  border: 1px solid rgba(255,255,255,0.15);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  z-index: 100;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  transition: all 0.2s;
+  margin-left: auto;
 }
 
-#pl-modal-close:hover { background: #ef4444; border-color: #ef4444; transform: rotate(90deg) scale(1.1); }
+#pl-modal-close:hover { background: rgba(239, 68, 68, 0.25); border-color: #ef4444; color: #ef4444; transform: rotate(90deg) scale(1.06); }
 
-.pl-modal-content { padding: 64px; }
-@media (max-width: 768px) {
-  .pl-modal-content { padding: 40px 24px; }
-  #pl-modal { border-radius: 0; max-height: 100vh; height: 100vh; }
-  #pl-modal-close { top: 16px; right: 16px; }
-  #pl-header h1 { font-size: 3rem; }
+.pl-modal-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+.pl-modal-scroll-body::-webkit-scrollbar { width: 6px; }
+.pl-modal-scroll-body::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+.pl-modal-scroll-body::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.45); border-radius: 10px; }
+
+.pl-modal-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+#pl-modal-left, #pl-modal-right { min-width: 0; box-sizing: border-box; }
+
+.pl-modal-media-wrap {
+  position: relative;
+  width: 100%;
+  height: 350px;
+  background: #06080e;
+  border: 1px solid var(--pl-border);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.pl-modal-img-bg {
+  position: absolute;
+  inset: -15px;
+  width: calc(100% + 30px);
+  height: calc(100% + 30px);
+  object-fit: cover;
+  object-position: center;
+  filter: blur(22px) opacity(0.4) brightness(0.65);
+  pointer-events: none;
+  z-index: 1;
+}
+.pl-modal-img {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
+}
+
+#pl-modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 14px 0;
+  line-height: 1.32;
+  word-break: break-word;
 }
 
 .pl-prompt-box {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--pl-border);
-  border-radius: 28px;
-  padding: 40px;
-  margin: 40px 0;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin: 12px 0 14px 0;
+  box-sizing: border-box;
 }
+.pl-prompt-box-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.pl-prompt-box-tag {
+  font-size: 0.72rem;
+  color: #a78bfa;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pl-prompt-quick-copy {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: #c4b5fd;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+.pl-prompt-quick-copy:hover { background: var(--pl-accent); color: #fff; }
+.pl-prompt-box-text-wrap { max-height: 200px; overflow-y: auto; }
+.pl-prompt-box-text-wrap::-webkit-scrollbar { width: 4px; }
+.pl-prompt-box-text-wrap::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.4); border-radius: 10px; }
 
 #pl-modal-prompt {
-  font-size: 1.15rem;
-  line-height: 1.9;
-  color: #fff;
+  font-size: 0.94rem;
+  line-height: 1.65;
+  color: #f1f5f9;
   white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
-.pl-btn-large {
+#pl-modal-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--pl-text-dim);
+  font-size: 0.8rem;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+
+.pl-modal-footer {
+  padding: 16px 24px 20px;
+  background: #090c14;
+  border-top: 1px solid var(--pl-border);
+  flex-shrink: 0;
+  z-index: 10;
+  box-sizing: border-box;
+}
+.pl-modal-actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  padding: 22px;
-  background: var(--pl-accent);
+  box-sizing: border-box;
+}
+#pl-modal-fav-btn, #pl-modal-share-btn {
+  width: 48px; height: 48px;
+  min-width: 48px; min-height: 48px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+}
+#pl-modal-copy-btn {
+  flex: 1;
+  height: 48px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
   color: #fff;
   border: none;
-  border-radius: 20px;
-  font-size: 1.25rem;
+  border-radius: 14px;
   font-weight: 800;
+  font-size: 1rem;
+  font-family: 'Outfit', sans-serif;
   cursor: pointer;
-  box-shadow: 0 20px 40px rgba(var(--pl-accent-rgb), 0.4);
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4);
+}
+#pl-modal-copy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
 }
 
-.pl-btn-large:hover { transform: translateY(-4px); box-shadow: 0 25px 50px rgba(var(--pl-accent-rgb), 0.5); }
+@media (max-width: 768px) {
+  #pl-modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    display: none;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    z-index: 999999 !important;
+  }
+  #pl-modal-overlay.open { display: flex !important; }
+  #pl-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    height: auto !important;
+    border-radius: 24px 24px 0 0 !important;
+    margin: 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.8) !important;
+    animation: plSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  @keyframes plSheetSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .pl-modal-header {
+    padding: 8px 16px 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+  .pl-modal-drag-pill {
+    display: block !important;
+    width: 44px !important;
+    height: 5px !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    margin: 2px auto 10px auto !important;
+  }
+  #pl-modal-close {
+    width: 34px !important; height: 34px !important;
+    min-width: 34px !important; min-height: 34px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    font-size: 0.9rem !important;
+  }
+  .pl-modal-scroll-body {
+    padding: 16px 16px 20px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .pl-modal-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+  #pl-modal-left, #pl-modal-right {
+    width: 100% !important; min-width: 0 !important;
+  }
+  .pl-modal-media-wrap {
+    height: 220px !important;
+    max-height: 240px !important;
+    border-radius: 16px !important;
+  }
+  #pl-modal-title {
+    font-size: 1.18rem !important;
+    line-height: 1.35 !important;
+    margin: 2px 0 10px 0 !important;
+  }
+  .pl-prompt-box {
+    padding: 14px !important;
+    border-radius: 14px !important;
+    margin: 10px 0 !important;
+  }
+  .pl-prompt-box-text-wrap {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #pl-modal-prompt {
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+  }
+  #pl-modal-meta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    font-size: 0.78rem !important;
+  }
+  .pl-modal-footer {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.6) !important;
+  }
+  .pl-modal-actions-wrap { gap: 8px !important; width: 100% !important; }
+  #pl-modal-fav-btn, #pl-modal-share-btn {
+    width: 46px !important; height: 46px !important;
+    min-width: 46px !important; min-height: 46px !important;
+    border-radius: 12px !important;
+    font-size: 1.1rem !important;
+  }
+  #pl-modal-copy-btn {
+    height: 46px !important;
+    padding: 0 16px !important;
+    font-size: 0.94rem !important;
+    border-radius: 12px !important;
+    flex: 1 !important;
+  }
+  #pl-header h1 { font-size: 3rem; }
+}
 
 /* Spinner & Load More */
 #pl-spinner { text-align: center; padding: 100px; display: none; }
@@ -562,26 +858,49 @@
 <!-- Modal Overlay -->
 <div id="pl-modal-overlay">
   <div id="pl-modal">
-    <button id="pl-modal-close">✕</button>
-    <div class="pl-modal-content">
-      <div id="pl-modal-badges" style="margin-bottom: 24px;"></div>
-      <h2 id="pl-modal-title" style="font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: #fff; margin-bottom: 32px; line-height: 1.1;"></h2>
-      
-      <div id="pl-modal-imgs" style="display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px;"></div>
-      
-      <div class="pl-prompt-box">
-        <div style="font-size: 0.8rem; color: var(--pl-accent); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px;">The Prompt</div>
-        <div id="pl-modal-prompt"></div>
+    <!-- Top Drag Handle & Mobile Close Bar -->
+    <div class="pl-modal-header">
+      <div class="pl-modal-drag-pill"></div>
+      <div class="pl-modal-header-row">
+        <div id="pl-modal-badges"></div>
+        <button id="pl-modal-close" type="button" aria-label="Close modal">✕</button>
       </div>
-      
-      <div id="pl-modal-meta" style="display: flex; flex-wrap: wrap; gap: 24px; color: var(--pl-text-dim); font-size: 0.95rem; margin-bottom: 48px; padding: 24px; background: rgba(255,255,255,0.03); border-radius: 20px;"></div>
-      
-      <div style="display:flex; gap:16px;">
-        <button id="pl-modal-fav-btn" class="pl-fav-btn" style="width: 72px !important; height: 72px !important; border-radius: 20px !important; font-size: 1.5rem !important;"></button>
-        <button id="pl-modal-share-btn" class="pl-share-btn" style="width: 72px !important; height: 72px !important; border-radius: 20px !important;">
+    </div>
+
+    <!-- Scrollable Content Body -->
+    <div class="pl-modal-scroll-body">
+      <div class="pl-modal-grid">
+        <div id="pl-modal-left">
+          <div id="pl-modal-imgs"></div>
+        </div>
+        <div id="pl-modal-right">
+          <h2 id="pl-modal-title"></h2>
+          <div class="pl-prompt-box">
+            <div class="pl-prompt-box-top">
+              <span class="pl-prompt-box-tag"><i class="fa-solid fa-terminal"></i> The Prompt</span>
+              <button type="button" id="pl-modal-quick-copy" class="pl-prompt-quick-copy">
+                <i class="fa-regular fa-clone"></i> Quick Copy
+              </button>
+            </div>
+            <div class="pl-prompt-box-text-wrap">
+              <div id="pl-modal-prompt"></div>
+            </div>
+          </div>
+          <div id="pl-modal-meta"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pinned Bottom Action Bar -->
+    <div class="pl-modal-footer">
+      <div class="pl-modal-actions-wrap">
+        <button id="pl-modal-fav-btn" class="pl-fav-btn" title="Save Prompt"></button>
+        <button id="pl-modal-share-btn" class="pl-share-btn" title="Share Prompt">
            <i class="fa-solid fa-share-nodes"></i>
         </button>
-        <button id="pl-modal-copy-btn" class="pl-btn-large">📋 Copy Full Prompt</button>
+        <button id="pl-modal-copy-btn" class="pl-btn-large">
+          <i class="fa-regular fa-clone"></i> Copy Full Prompt
+        </button>
       </div>
     </div>
   </div>
@@ -719,6 +1038,84 @@
     return card;
   }
 
+  function copyToClipboard(text, onDone, onFail) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackClipboardCopy(text, onDone, onFail));
+    } else {
+      fallbackClipboardCopy(text, onDone, onFail);
+    }
+  }
+
+  function fallbackClipboardCopy(text, onDone, onFail) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.left = '0';
+      ta.style.opacity = '0';
+      ta.setAttribute('readonly', '');
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (success) {
+        if (onDone) onDone();
+      } else {
+        if (onFail) onFail();
+      }
+    } catch (err) {
+      if (onFail) onFail();
+    }
+  }
+
+  function plCopy(e, btn, text, originalHtml = '📋 Copy') {
+    if (e) e.stopPropagation();
+    copyToClipboard(text, () => {
+      const oldHtml = btn.innerHTML;
+      const oldBg = btn.style.background;
+      const oldBorder = btn.style.borderColor;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      btn.style.background = '#10b981';
+      btn.style.borderColor = '#10b981';
+      setTimeout(() => {
+        btn.innerHTML = oldHtml;
+        btn.style.background = oldBg;
+        btn.style.borderColor = oldBorder;
+      }, 2000);
+    }, () => {
+      alert('Prompt copied! (Please paste manually)');
+    });
+  }
+
+  function plShare(e, text, id) {
+    if (e) e.stopPropagation();
+    const shareData = {
+      title: 'Awesome AI Prompt',
+      text: text,
+      url: window.location.origin + window.location.pathname + '?id=' + id
+    };
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      copyToClipboard(shareData.url, () => {
+        alert('Prompt link copied to clipboard!');
+      });
+    }
+  }
+
+  function closeModal() {
+    const overlay = document.getElementById('pl-modal-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    
+    // Pause any playing videos
+    const videos = overlay.querySelectorAll('video');
+    videos.forEach(v => { try { v.pause(); } catch(e){} });
+  }
+
   function openModal(p) {
     const overlay = document.getElementById('pl-modal-overlay');
     const imgsEl = document.getElementById('pl-modal-imgs');
@@ -728,23 +1125,58 @@
 
     if (p.video_url) {
       imgsEl.innerHTML = `
-        <div class="pl-video-container">
-          <video class="pl-video" controls poster="${imgs[0] || ''}">
+        <div class="pl-modal-media-wrap">
+          <video class="pl-modal-video" controls playsinline poster="${imgs[0] || ''}">
             <source src="${p.video_url}" type="video/mp4">
-            Your browser does not support the video tag.
           </video>
         </div>
       `;
+    } else if (imgs && imgs.length > 0) {
+      if (imgs.length === 1) {
+        imgsEl.innerHTML = `
+          <div class="pl-modal-media-wrap">
+            <img class="pl-modal-img-bg" src="${imgs[0]}" alt="" aria-hidden="true">
+            <img class="pl-modal-img" src="${imgs[0]}" alt="${esc(p.text_output || 'AI Prompt')}" loading="eager">
+          </div>
+        `;
+      } else {
+        imgsEl.innerHTML = `
+          <div class="pl-modal-media-carousel">
+            ${imgs.map(src => `
+              <div class="pl-modal-media-wrap">
+                <img class="pl-modal-img-bg" src="${src}" alt="" aria-hidden="true">
+                <img class="pl-modal-img" src="${src}" alt="${esc(p.text_output || 'AI Prompt')}" loading="eager">
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
     } else {
-      imgsEl.innerHTML = imgs.map(src => `<div style="text-align:center;"><img src="${src}" style="width:100%; max-width:600px; border-radius:24px; border:1px solid var(--pl-border); box-shadow: 0 10px 30px rgba(0,0,0,0.3);"></div>`).join('');
+      imgsEl.innerHTML = `
+        <div style="background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.25); border-radius:18px; padding:22px; color:#fff;">
+          <div style="font-size:0.76rem; color:var(--pl-accent); font-weight:800; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px;">
+            <i class="fa-solid fa-sparkles"></i> AI Generated Result
+          </div>
+          <div style="font-size:1.12rem; font-style:italic; opacity:0.95; line-height:1.55;">"${esc(p.text_output || 'Text Prompt Result')}"</div>
+        </div>
+      `;
     }
     
     document.getElementById('pl-modal-badges').innerHTML = `<span class="pl-cat-badge">${icon} ${esc(p.category)}</span>`;
     document.getElementById('pl-modal-title').textContent = p.text_output || `${p.category} Prompt`;
     document.getElementById('pl-modal-prompt').textContent = p.prompt;
     
+    // Quick Copy button inside prompt box
+    const quickCopyBtn = document.getElementById('pl-modal-quick-copy');
+    if (quickCopyBtn) {
+      quickCopyBtn.onclick = (e) => plCopy(e, quickCopyBtn, p.prompt, '<i class="fa-regular fa-clone"></i> Quick Copy');
+    }
+
     const copyBtn = document.getElementById('pl-modal-copy-btn');
-    copyBtn.onclick = (e) => plCopy(e, copyBtn, p.prompt, '📋 Copy Full Prompt');
+    copyBtn.innerHTML = '<i class="fa-regular fa-clone"></i> Copy Full Prompt';
+    copyBtn.style.background = '';
+    copyBtn.style.borderColor = '';
+    copyBtn.onclick = (e) => plCopy(e, copyBtn, p.prompt, '<i class="fa-regular fa-clone"></i> Copy Full Prompt');
 
     const shareBtn = document.getElementById('pl-modal-share-btn');
     shareBtn.onclick = (e) => plShare(e, p.prompt.substring(0, 100), p.id);
@@ -754,54 +1186,89 @@
     favBtn.classList.toggle('active', activeFav);
     favBtn.innerHTML = activeFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
     
+    const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';
     document.getElementById('pl-modal-meta').innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px;">🆔 ID: <strong style="color:#fff;">#${p.id}</strong></div>
-      <div style="display:flex; align-items:center; gap:8px;">👤 Creator: <strong style="color:#fff;">${esc(p.username || 'Anonymous')}</strong></div>
-      <div style="display:flex; align-items:center; gap:8px;">📅 ${new Date(p.created_at).toLocaleDateString()}</div>
+      <span><i class="fa-solid fa-hashtag" style="opacity:0.6;"></i> ID: <b>#${p.id}</b></span>
+      <span><i class="fa-solid fa-user-astronaut" style="opacity:0.6;"></i> Creator: <strong style="color:#fff;">${esc(p.username || 'Anonymous')}</strong></span>
+      ${dateStr ? `<span><i class="fa-regular fa-calendar" style="opacity:0.6;"></i> ${dateStr}</span>` : ''}
     `;
+
+    // Reset scroll position to top
+    const scrollBody = overlay.querySelector('.pl-modal-scroll-body');
+    if (scrollBody) scrollBody.scrollTop = 0;
 
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
 
-  function plCopy(e, btn, text, originalText = '📋 Copy') {
-    e.stopPropagation();
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = '✅ Copied!';
-      btn.style.background = '#10b981';
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = '';
-      }, 2000);
+  // Close Button Listener
+  const modalCloseBtn = document.getElementById('pl-modal-close');
+  if (modalCloseBtn) {
+    modalCloseBtn.onclick = closeModal;
+  }
+
+  // Backdrop Click to Close
+  const modalOverlayEl = document.getElementById('pl-modal-overlay');
+  if (modalOverlayEl) {
+    modalOverlayEl.addEventListener('click', (e) => {
+      if (e.target.id === 'pl-modal-overlay') {
+        closeModal();
+      }
     });
   }
 
-  function plShare(e, text, id) {
-    e.stopPropagation();
-    const shareData = {
-      title: 'Awesome Prompt',
-      text: text,
-      url: window.location.href + '?id=' + id
-    };
-    if (navigator.share) {
-      navigator.share(shareData);
-    } else {
-      navigator.clipboard.writeText(shareData.url);
-      alert('Link copied to clipboard!');
-    }
-  }
-
-  document.getElementById('pl-modal-close').addEventListener('click', () => {
-    document.getElementById('pl-modal-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-  });
-
-  document.getElementById('pl-modal-overlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('pl-modal-overlay')) {
-      document.getElementById('pl-modal-overlay').classList.remove('open');
-      document.body.style.overflow = '';
+  // Keyboard Escape Key to Close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('pl-modal-overlay');
+      if (overlay && overlay.classList.contains('open')) {
+        closeModal();
+      }
     }
   });
+
+  // Mobile Swipe-Down to Dismiss on Header
+  (function initModalSwipeDismiss() {
+    const modalEl = document.getElementById('pl-modal');
+    const headerEl = document.querySelector('.pl-modal-header');
+    if (!modalEl || !headerEl) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    headerEl.addEventListener('touchstart', (e) => {
+      if (window.innerWidth > 768) return;
+      startY = e.touches[0].clientY;
+      isDragging = true;
+    }, { passive: true });
+
+    headerEl.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      currentY = e.touches[0].clientY;
+      const diffY = currentY - startY;
+      if (diffY > 0) {
+        modalEl.style.transform = `translateY(${diffY}px)`;
+        modalEl.style.transition = 'none';
+      }
+    }, { passive: true });
+
+    headerEl.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      const diffY = currentY - startY;
+      modalEl.style.transition = 'transform 0.25s ease';
+      if (diffY > 75) {
+        modalEl.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          modalEl.style.transform = '';
+          closeModal();
+        }, 180);
+      } else {
+        modalEl.style.transform = '';
+      }
+    });
+  })();
 
   document.getElementById('pl-search').addEventListener('input', (e) => {
     searchTerm = e.target.value;
