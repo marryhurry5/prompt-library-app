@@ -1,6 +1,8 @@
-﻿*.apk
+*.apk
+*.aab
 *.zip
 *.tar.gz
+config.php
 prompt_library_app/build/
 prompt_library_app/.dart_tool/
 prompt_library_app/.flutter-plugins
