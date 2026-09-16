@@ -685,12 +685,17 @@ $is_wordpress = defined('ABSPATH');
     }
 
     /* Scrollable Content Body */
+    /* Scrollable Content Body (Strict Vertical Only - Zero Horizontal Scroll) */
     .pl-modal-scroll-body {
         flex: 1;
-        overflow-y: auto;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         padding: 24px;
         -webkit-overflow-scrolling: touch;
         box-sizing: border-box;
+        touch-action: pan-y;
+        width: 100%;
+        max-width: 100%;
     }
     .pl-modal-scroll-body::-webkit-scrollbar { width: 6px; }
     .pl-modal-scroll-body::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
@@ -702,28 +707,37 @@ $is_wordpress = defined('ABSPATH');
         gap: 24px;
         align-items: start;
         width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
         box-sizing: border-box;
     }
     #pl-modal-left, #pl-modal-right {
         min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+    #pl-modal-imgs {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
         box-sizing: border-box;
     }
 
-    /* Media Frame & Carousel */
-    .pl-modal-media-carousel {
+    /* Media Frame & Vertical Stack (Zero Horizontal Scroll) */
+    .pl-modal-media-list {
         display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
+        flex-direction: column;
+        gap: 14px;
         width: 100%;
-        border-radius: 20px;
+        max-width: 100%;
+        overflow-x: hidden;
         box-sizing: border-box;
     }
     .pl-modal-media-wrap {
         position: relative;
-        flex: 0 0 100%;
-        scroll-snap-align: center;
+        width: 100%;
+        max-width: 100%;
         height: 350px;
         background: #06080e;
         border: 1px solid var(--pl-border);
@@ -736,12 +750,13 @@ $is_wordpress = defined('ABSPATH');
     }
     .pl-modal-img-bg {
         position: absolute;
-        inset: -15px;
-        width: calc(100% + 30px);
-        height: calc(100% + 30px);
+        inset: 0;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         object-position: center;
         filter: blur(22px) opacity(0.4) brightness(0.65);
+        transform: scale(1.1);
         pointer-events: none;
         z-index: 1;
     }
@@ -758,6 +773,7 @@ $is_wordpress = defined('ABSPATH');
         position: relative;
         z-index: 2;
         width: 100%;
+        max-width: 100%;
         height: 100%;
         max-height: 100%;
         object-fit: contain;
@@ -794,6 +810,9 @@ $is_wordpress = defined('ABSPATH');
         margin: 12px 0 14px 0; 
         position: relative;
         box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     .pl-prompt-box-top {
         display: flex;
@@ -802,6 +821,8 @@ $is_wordpress = defined('ABSPATH');
         margin-bottom: 10px;
         padding-bottom: 6px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        width: 100%;
+        box-sizing: border-box;
     }
     .pl-prompt-box-tag {
         font-size: 0.72rem;
@@ -834,6 +855,10 @@ $is_wordpress = defined('ABSPATH');
     .pl-prompt-box-text-wrap {
         max-height: 200px;
         overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .pl-prompt-box-text-wrap::-webkit-scrollbar { width: 4px; }
     .pl-prompt-box-text-wrap::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.4); border-radius: 10px; }
@@ -844,6 +869,11 @@ $is_wordpress = defined('ABSPATH');
         color: #f1f5f9;
         white-space: pre-wrap; 
         word-break: break-word; 
+        overflow-wrap: anywhere;
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
         user-select: text;
         -webkit-user-select: text;
@@ -1058,27 +1088,58 @@ $is_wordpress = defined('ABSPATH');
         .pl-modal-scroll-body {
             padding: 16px 16px 20px !important;
             overflow-y: auto !important;
+            overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
         }
         .pl-modal-grid { 
             display: flex !important;
             flex-direction: column !important;
             gap: 14px !important;
             width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
         }
         #pl-modal-left, #pl-modal-right { 
             width: 100% !important; 
+            max-width: 100% !important; 
             min-width: 0 !important; 
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
         }
 
+        #pl-modal-imgs {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+        }
+        .pl-modal-media-list {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+        }
         .pl-modal-media-wrap {
             height: 220px !important;
             max-height: 240px !important;
             border-radius: 16px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
         }
         .pl-result-box {
             padding: 16px !important;
             border-radius: 16px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
         }
 
         #pl-modal-title { 
@@ -1086,6 +1147,10 @@ $is_wordpress = defined('ABSPATH');
             line-height: 1.35 !important; 
             margin: 2px 0 10px 0 !important; 
             word-break: break-word !important; 
+            overflow-wrap: anywhere !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
         }
 
         .pl-prompt-box { 
@@ -1093,15 +1158,28 @@ $is_wordpress = defined('ABSPATH');
             border-radius: 14px !important; 
             margin: 10px 0 !important; 
             word-break: break-word !important; 
+            overflow-wrap: anywhere !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
         }
         .pl-prompt-box-text-wrap {
             max-height: none !important;
             overflow: visible !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
         }
         #pl-modal-prompt { 
             font-size: 0.9rem !important; 
             line-height: 1.6 !important; 
             word-break: break-word !important; 
+            overflow-wrap: anywhere !important;
+            overflow-x: hidden !important;
+            white-space: pre-wrap !important;
+            width: 100% !important;
+            max-width: 100% !important;
         }
 
         #pl-modal-meta { 
@@ -1112,6 +1190,12 @@ $is_wordpress = defined('ABSPATH');
             border-radius: 12px !important; 
             font-size: 0.78rem !important; 
             margin-bottom: 8px !important; 
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
         }
         
         .pl-modal-footer {
@@ -1538,7 +1622,7 @@ function openPrompt(id) {
             `;
         } else {
             imgsEl.innerHTML = `
-                <div class="pl-modal-media-carousel">
+                <div class="pl-modal-media-list">
                     ${p.image_urls.map(src => `
                         <div class="pl-modal-media-wrap">
                             <img class="pl-modal-img-bg" src="${src}" alt="" aria-hidden="true">
