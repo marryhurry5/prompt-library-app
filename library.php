@@ -89,9 +89,32 @@ foreach ($ssr_prompts as &$p) {
 }
 unset($p);
 
-// Handle Auto-Open for SEO
+// Slug generator for clean SEO URLs
+if (!function_exists('pl_slugify')) {
+    function pl_slugify($text, $fallback = 'prompt') {
+        $text = strip_tags($text);
+        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+        if (function_exists('iconv')) {
+            $trans = @iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+            if ($trans !== false) {
+                $text = $trans;
+            }
+        }
+        $text = preg_replace('~[^-\w]+~', '', $text);
+        $text = trim($text, '-');
+        $text = preg_replace('~-+~', '-', $text);
+        $text = strtolower($text);
+        return !empty($text) ? substr($text, 0, 60) : $fallback;
+    }
+}
+
+// Handle Auto-Open & Direct Search Visits for SEO
 $auto_open_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $auto_open_data = null;
+$auto_open_slug = '';
+$clean_prompt_url = 'https://rtmcreator.com/prompt-library/';
+$related_prompts = [];
+
 if ($auto_open_id > 0) {
     $stmt = $pdo->prepare("
         SELECT s.id, s.category, s.output_type, s.tags, s.prompt, s.text_output, s.local_media, s.created_at, u.username
@@ -120,6 +143,52 @@ if ($auto_open_id > 0) {
                 $auto_open_data['image_urls'] = array_map(fn($path) => $base . '/' . ltrim($path, '/'), $local_data);
             }
         }
+
+        $auto_open_slug = pl_slugify($auto_open_data['text_output'] ?: ($auto_open_data['category'] . ' AI Prompt'));
+        $clean_prompt_url = 'https://rtmcreator.com/prompt-library/' . $auto_open_id . '/' . $auto_open_slug . '/';
+
+        // Fetch 4 related prompts in the same category for SEO internal spidering
+        try {
+            $rel_stmt = $pdo->prepare("
+                SELECT s.id, s.category, s.output_type, s.prompt, s.text_output, s.local_media, s.created_at, u.username
+                FROM submissions s
+                JOIN users u ON s.telegram_id = u.telegram_id
+                WHERE s.status = 'approved' AND s.category = :category AND s.id != :id
+                ORDER BY s.created_at DESC
+                LIMIT 4
+            ");
+            $rel_stmt->execute([
+                ':category' => $auto_open_data['category'],
+                ':id' => $auto_open_id
+            ]);
+            $related_prompts = $rel_stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($related_prompts as &$rp) {
+                $rp_local = json_decode($rp['local_media'] ?? '', true);
+                $rp['thumb'] = null;
+                if (is_array($rp_local)) {
+                    if (isset($rp_local['thumb']) && $rp_local['thumb']) {
+                        $rp['thumb'] = $base . '/' . ltrim($rp_local['thumb'], '/');
+                    } elseif (!isset($rp_local['video']) && count($rp_local) > 0) {
+                        $first = reset($rp_local);
+                        if (is_string($first)) $rp['thumb'] = $base . '/' . ltrim($first, '/');
+                    }
+                }
+                $rp['slug'] = pl_slugify($rp['text_output'] ?: ($rp['category'] . ' AI Prompt'));
+                $rp['url'] = 'https://rtmcreator.com/prompt-library/' . $rp['id'] . '/' . $rp['slug'] . '/';
+            }
+            unset($rp);
+        } catch (Exception $e) {
+            $related_prompts = [];
+        }
+
+        // 301 Permanent Redirect for legacy query parameter URLs (?id=123) to clean SEO slug URL
+        if (!empty($clean_prompt_url) && !empty($_SERVER['REQUEST_URI'])) {
+            if (strpos($_SERVER['REQUEST_URI'], '?id=') !== false && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                header("HTTP/1.1 301 Moved Permanently");
+                header("Location: " . $clean_prompt_url);
+                exit;
+            }
+        }
     }
 }
 
@@ -131,24 +200,74 @@ $is_wordpress = defined('ABSPATH');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $auto_open_data ? htmlspecialchars($auto_open_data['text_output']) . " | AI Prompt Library" : "Premium AI Prompt Library | Best ChatGPT & Art Prompts"; ?></title>
-    <meta name="description" content="<?php echo $auto_open_data ? htmlspecialchars(mb_strimwidth($auto_open_data['prompt'], 0, 160, "...")) : "Discover the world's best AI Art, ChatGPT, and creative prompts. Browse our curated library of community-submitted AI results and copy them for free."; ?>">
+    <title><?php echo $auto_open_data ? htmlspecialchars($auto_open_data['text_output'] ?: ($auto_open_data['category'] . ' AI Prompt')) . " | Free AI Prompt & Copy Instructions" : "Premium AI Prompt Library | Best ChatGPT & Art Prompts"; ?></title>
+    <meta name="description" content="<?php echo $auto_open_data ? htmlspecialchars(mb_strimwidth($auto_open_data['prompt'], 0, 155, "...")) . " - Copy this " . htmlspecialchars($auto_open_data['category']) . " AI prompt for free on AI Prompt Hub." : "Discover the world's best AI Art, ChatGPT, and creative prompts. Browse our curated library of community-submitted AI results and copy them for free."; ?>">
     
     <!-- Open Graph / Social Media -->
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="<?php echo $auto_open_data ? 'article' : 'website'; ?>">
     <meta property="og:site_name" content="Prompt Library Marketplace">
-    <meta property="og:url" content="<?php echo $auto_open_data ? 'https://rtmcreator.com/prompt-library/?id=' . $auto_open_id : 'https://rtmcreator.com/prompt-library/'; ?>">
-    <meta property="og:title" content="<?php echo $auto_open_data ? htmlspecialchars($auto_open_data['text_output']) . ' | Prompt Library' : 'Premium AI Prompt Library | Best ChatGPT & Art Prompts'; ?>">
-    <meta property="og:description" content="<?php echo $auto_open_data ? htmlspecialchars(mb_strimwidth($auto_open_data['prompt'], 0, 160, "...")) : "Discover the world's best AI Art, ChatGPT, and creative prompts. Browse our curated library of community-submitted AI results and copy them for free."; ?>">
+    <meta property="og:url" content="<?php echo htmlspecialchars($clean_prompt_url); ?>">
+    <meta property="og:title" content="<?php echo $auto_open_data ? htmlspecialchars($auto_open_data['text_output'] ?: ($auto_open_data['category'] . ' AI Prompt')) . ' | AI Prompt Hub' : 'Premium AI Prompt Library | Best ChatGPT & Art Prompts'; ?>">
+    <meta property="og:description" content="<?php echo $auto_open_data ? htmlspecialchars(mb_strimwidth($auto_open_data['prompt'], 0, 155, "...")) : "Discover the world's best AI Art, ChatGPT, and creative prompts. Browse our curated library of community-submitted AI results and copy them for free."; ?>">
     <?php if ($auto_open_data && count($auto_open_data['image_urls']) > 0): ?>
-        <meta property="og:image" content="<?php echo $auto_open_data['image_urls'][0]; ?>">
+        <meta property="og:image" content="<?php echo htmlspecialchars($auto_open_data['image_urls'][0]); ?>">
         <meta name="twitter:card" content="summary_large_image">
     <?php else: ?>
         <meta name="twitter:card" content="summary">
     <?php endif; ?>
-    <link rel="canonical" href="<?php echo $auto_open_data ? 'https://rtmcreator.com/prompt-library/?id=' . $auto_open_id : 'https://rtmcreator.com/prompt-library/'; ?>">
+    <link rel="canonical" href="<?php echo htmlspecialchars($clean_prompt_url); ?>">
 
-    <!-- JSON-LD Structured Data -->
+    <!-- JSON-LD Structured Data for Google Search Engine Optimization -->
+    <?php if ($auto_open_data): ?>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://rtmcreator.com/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Prompt Library",
+              "item": "https://rtmcreator.com/prompt-library/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "<?php echo addslashes($auto_open_data['category']); ?>",
+              "item": "https://rtmcreator.com/prompt-library/?category=<?php echo urlencode($auto_open_data['category']); ?>"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "<?php echo addslashes($auto_open_data['text_output'] ?: $auto_open_data['category'] . ' Prompt'); ?>",
+              "item": "<?php echo addslashes($clean_prompt_url); ?>"
+            }
+          ]
+        },
+        {
+          "@type": "CreativeWork",
+          "headline": "<?php echo addslashes($auto_open_data['text_output'] ?: $auto_open_data['category'] . ' AI Prompt'); ?>",
+          "text": "<?php echo addslashes($auto_open_data['prompt']); ?>",
+          "url": "<?php echo addslashes($clean_prompt_url); ?>",
+          "datePublished": "<?php echo date('c', strtotime($auto_open_data['created_at'])); ?>",
+          "author": {
+            "@type": "Person",
+            "name": "<?php echo addslashes($auto_open_data['username']); ?>"
+          }<?php if (!empty($auto_open_data['image_urls'])): ?>,
+          "image": "<?php echo addslashes($auto_open_data['image_urls'][0]); ?>"<?php endif; ?>
+        }
+      ]
+    }
+    </script>
+    <?php else: ?>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -172,6 +291,7 @@ $is_wordpress = defined('ABSPATH');
       ]
     }
     </script>
+    <?php endif; ?>
 <?php endif; ?>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1394,6 +1514,463 @@ $is_wordpress = defined('ABSPATH');
             border-radius: 10px !important;
         }
         .pl-search-btn-text { display: none !important; }
+    /* ==========================================================================
+       STANDALONE PROMPT HERO (OPTIMIZED FOR GOOGLEBOT & DIRECT SEARCH VISITORS)
+       ========================================================================== */
+    .pl-standalone-container {
+        max-width: 1040px;
+        margin: 0 auto 50px auto;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Breadcrumbs */
+    .pl-breadcrumbs {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--pl-text-dim);
+        margin-bottom: 20px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--pl-border);
+        border-radius: 12px;
+    }
+    .pl-breadcrumbs a {
+        color: #c4b5fd;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .pl-breadcrumbs a:hover {
+        color: #fff;
+        text-decoration: underline;
+    }
+    .pl-bc-sep {
+        color: rgba(255, 255, 255, 0.25);
+    }
+    .pl-bc-current {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* Main Standalone Card */
+    .pl-standalone-card {
+        background: var(--pl-surface);
+        border: 1px solid var(--pl-border);
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.12);
+        box-sizing: border-box;
+        margin-bottom: 36px;
+    }
+    .pl-standalone-grid {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 28px;
+        align-items: start;
+        box-sizing: border-box;
+    }
+    .pl-standalone-media-col, .pl-standalone-info-col {
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    /* Media presentation in standalone */
+    .pl-standalone-media-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 100%;
+    }
+    .pl-standalone-media-wrap {
+        position: relative;
+        width: 100%;
+        height: 380px;
+        background: #06080e;
+        border: 1px solid var(--pl-border);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+    .pl-standalone-img-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: blur(22px) opacity(0.4) brightness(0.65);
+        transform: scale(1.1);
+        pointer-events: none;
+        z-index: 1;
+    }
+    .pl-standalone-img {
+        position: relative;
+        z-index: 2;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 12px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
+    }
+    .pl-standalone-video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #000;
+        border-radius: 12px;
+    }
+    .pl-standalone-text-result {
+        background: rgba(var(--pl-accent-rgb), 0.08);
+        border: 1px solid rgba(var(--pl-accent-rgb), 0.25);
+        border-radius: 18px;
+        padding: 24px;
+        color: #fff;
+    }
+    .pl-standalone-result-badge {
+        font-size: 0.78rem;
+        color: var(--pl-accent);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+    }
+    .pl-standalone-result-quote {
+        font-size: 1.15rem;
+        font-style: italic;
+        line-height: 1.6;
+    }
+
+    /* Info presentation in standalone */
+    .pl-standalone-badges {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .pl-standalone-author {
+        font-size: 0.82rem;
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .pl-standalone-date {
+        font-size: 0.82rem;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .pl-standalone-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.3;
+        margin: 0 0 16px 0;
+        word-break: break-word;
+    }
+    .pl-standalone-prompt-text {
+        font-size: 0.95rem;
+        line-height: 1.65;
+        color: #f1f5f9;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 240px;
+        overflow-y: auto;
+        padding-right: 6px;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .pl-standalone-prompt-text::-webkit-scrollbar { width: 4px; }
+    .pl-standalone-prompt-text::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.4); border-radius: 10px; }
+
+    .pl-standalone-actions-row {
+        display: flex;
+        gap: 12px;
+        margin: 18px 0;
+        flex-wrap: wrap;
+    }
+    .pl-standalone-copy-btn {
+        flex: 1;
+        min-width: 180px;
+        height: 48px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 0.96rem;
+        font-family: 'Outfit', sans-serif;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4);
+    }
+    .pl-standalone-copy-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+    }
+    .pl-standalone-share-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--pl-border);
+        color: #fff;
+        font-size: 1.15rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .pl-standalone-share-btn:hover {
+        background: rgba(255, 255, 255, 0.14);
+        transform: scale(1.05);
+    }
+
+    /* In-card Earn Banner */
+    .pl-standalone-earn-banner {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        background: rgba(2, 132, 199, 0.12);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 16px;
+        margin-top: 14px;
+        box-sizing: border-box;
+    }
+    .pl-standalone-earn-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(34, 158, 217, 0.2);
+        color: #38bdf8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+    .pl-standalone-earn-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .pl-standalone-earn-title {
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.92rem;
+        font-family: 'Outfit', sans-serif;
+    }
+    .pl-standalone-earn-desc {
+        color: #94a3b8;
+        font-size: 0.76rem;
+        line-height: 1.3;
+    }
+    .pl-standalone-earn-btn {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+        color: #fff !important;
+        text-decoration: none !important;
+        font-weight: 700;
+        font-size: 0.82rem;
+        padding: 9px 14px;
+        border-radius: 10px;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.2s;
+    }
+    .pl-standalone-earn-btn:hover {
+        transform: scale(1.04);
+    }
+
+    /* Related Prompts Section (For Internal Linking & Googlebot Spidering) */
+    .pl-related-section {
+        margin: 30px 0;
+    }
+    .pl-related-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+    .pl-related-header h2 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .pl-related-header h2 i {
+        color: var(--pl-accent);
+    }
+    .pl-related-more-link {
+        color: #a78bfa;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: color 0.2s;
+    }
+    .pl-related-more-link:hover {
+        color: #fff;
+    }
+    .pl-related-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+    }
+    .pl-related-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--pl-border);
+        border-radius: 16px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .pl-related-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(139, 92, 246, 0.4);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+    .pl-related-img-wrap {
+        height: 140px;
+        width: 100%;
+        background: #090c14;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .pl-related-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .pl-related-fallback-icon {
+        font-size: 1.8rem;
+        color: rgba(139, 92, 246, 0.5);
+    }
+    .pl-related-body {
+        padding: 12px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .pl-related-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.35;
+        margin-bottom: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .pl-related-meta {
+        font-size: 0.74rem;
+        color: #94a3b8;
+    }
+
+    /* Explore Full Library Transition Button */
+    .pl-explore-divider {
+        text-align: center;
+        margin: 40px 0 30px 0;
+        position: relative;
+    }
+    .pl-explore-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #f1f5f9;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.98rem;
+        font-weight: 700;
+        padding: 14px 28px;
+        border-radius: 100px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        transition: all 0.25s;
+    }
+    .pl-explore-btn:hover {
+        background: rgba(139, 92, 246, 0.2);
+        border-color: #8b5cf6;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35);
+    }
+
+    /* Mobile Responsive adjustments for Standalone Hero */
+    @media (max-width: 768px) {
+        .pl-standalone-container {
+            margin-bottom: 30px;
+        }
+        .pl-standalone-card {
+            padding: 18px 14px;
+            border-radius: 18px;
+        }
+        .pl-standalone-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .pl-standalone-media-wrap {
+            height: 240px;
+        }
+        .pl-standalone-title {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+        .pl-standalone-prompt-text {
+            font-size: 0.88rem;
+            max-height: 200px;
+        }
+        .pl-standalone-earn-banner {
+            flex-direction: column;
+            text-align: center;
+            padding: 14px;
+            gap: 10px;
+        }
+        .pl-standalone-earn-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .pl-related-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .pl-related-img-wrap {
+            height: 110px;
+        }
+    }
+    @media (max-width: 480px) {
+        .pl-related-grid {
+            grid-template-columns: 1fr;
+        }
     }
     </style>
 <body>
@@ -1410,6 +1987,128 @@ $is_wordpress = defined('ABSPATH');
     <?php
     $total_approved_count = (int)$pdo->query("SELECT COUNT(*) FROM submissions WHERE status = 'approved'")->fetchColumn();
     ?>
+
+    <?php if ($auto_open_data): ?>
+    <!-- ==========================================================================
+         STANDALONE PROMPT VIEW (OPTIMIZED FOR GOOGLEBOT & SEARCH ENGINE USERS)
+         ========================================================================== -->
+    <div id="pl-standalone-hero" class="pl-standalone-container">
+        <nav class="pl-breadcrumbs" aria-label="Breadcrumb">
+            <a href="https://rtmcreator.com/"><i class="fa-solid fa-house"></i> Home</a>
+            <span class="pl-bc-sep">/</span>
+            <a href="https://rtmcreator.com/prompt-library/">Prompt Library</a>
+            <span class="pl-bc-sep">/</span>
+            <a href="https://rtmcreator.com/prompt-library/?category=<?php echo urlencode($auto_open_data['category']); ?>"><?php echo htmlspecialchars($auto_open_data['category']); ?></a>
+            <span class="pl-bc-sep">/</span>
+            <span class="pl-bc-current"><?php echo htmlspecialchars(mb_strimwidth($auto_open_data['text_output'] ?: 'Prompt #' . $auto_open_id, 0, 45, '...')); ?></span>
+        </nav>
+
+        <article class="pl-standalone-card">
+            <div class="pl-standalone-grid">
+                <!-- Media Column -->
+                <div class="pl-standalone-media-col">
+                    <?php if (!empty($auto_open_data['video_url'])): ?>
+                        <div class="pl-standalone-media-wrap">
+                            <video class="pl-standalone-video" controls playsinline poster="<?php echo $auto_open_data['image_urls'][0] ?? ''; ?>">
+                                <source src="<?php echo htmlspecialchars($auto_open_data['video_url']); ?>" type="video/mp4">
+                            </video>
+                        </div>
+                    <?php elseif (!empty($auto_open_data['image_urls'])): ?>
+                        <div class="pl-standalone-media-list">
+                            <?php foreach ($auto_open_data['image_urls'] as $img_src): ?>
+                                <div class="pl-standalone-media-wrap">
+                                    <img class="pl-standalone-img-bg" src="<?php echo htmlspecialchars($img_src); ?>" alt="" aria-hidden="true">
+                                    <img class="pl-standalone-img" src="<?php echo htmlspecialchars($img_src); ?>" alt="<?php echo htmlspecialchars($auto_open_data['text_output'] ?: 'AI Prompt Artwork'); ?>" loading="eager">
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="pl-standalone-text-result">
+                            <div class="pl-standalone-result-badge"><i class="fa-solid fa-sparkles"></i> AI Generated Result</div>
+                            <div class="pl-standalone-result-quote">"<?php echo htmlspecialchars($auto_open_data['text_output'] ?: 'AI Prompt Result'); ?>"</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Info Column -->
+                <div class="pl-standalone-info-col">
+                    <div class="pl-standalone-badges">
+                        <span class="pl-cat-badge"><?php echo htmlspecialchars($auto_open_data['category']); ?></span>
+                        <span class="pl-standalone-author"><i class="fa-solid fa-user-astronaut"></i> @<?php echo htmlspecialchars($auto_open_data['username']); ?></span>
+                        <span class="pl-standalone-date"><i class="fa-regular fa-clock"></i> <?php echo date('M d, Y', strtotime($auto_open_data['created_at'])); ?></span>
+                    </div>
+
+                    <h1 class="pl-standalone-title"><?php echo htmlspecialchars($auto_open_data['text_output'] ?: $auto_open_data['category'] . ' AI Prompt'); ?></h1>
+
+                    <div class="pl-prompt-box">
+                        <div class="pl-prompt-box-top">
+                            <span class="pl-prompt-box-tag"><i class="fa-solid fa-terminal"></i> PROMPT INSTRUCTIONS</span>
+                            <button type="button" class="pl-prompt-quick-copy" onclick="plCopyDirect(this, <?php echo htmlspecialchars(json_encode($auto_open_data['prompt'])); ?>)">
+                                <i class="fa-regular fa-clone"></i> Quick Copy
+                            </button>
+                        </div>
+                        <div class="pl-standalone-prompt-text"><?php echo htmlspecialchars($auto_open_data['prompt']); ?></div>
+                    </div>
+
+                    <div class="pl-standalone-actions-row">
+                        <button type="button" class="pl-standalone-copy-btn" onclick="plCopyDirect(this, <?php echo htmlspecialchars(json_encode($auto_open_data['prompt'])); ?>)">
+                            <i class="fa-regular fa-clone"></i> Copy Full Prompt
+                        </button>
+                        <button type="button" class="pl-standalone-share-btn" onclick="plShareCustom('<?php echo htmlspecialchars(addslashes($auto_open_data['text_output'] ?: 'AI Prompt')); ?>', '<?php echo htmlspecialchars($clean_prompt_url); ?>')">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </button>
+                    </div>
+
+                    <!-- Creator Callout Banner -->
+                    <div class="pl-standalone-earn-banner">
+                        <div class="pl-standalone-earn-icon"><i class="fa-brands fa-telegram"></i></div>
+                        <div class="pl-standalone-earn-content">
+                            <div class="pl-standalone-earn-title">Submit Prompts &amp; Earn Cash!</div>
+                            <div class="pl-standalone-earn-desc">Earn ₹0.50 – ₹1.00 per approved prompt + referral bonuses.</div>
+                        </div>
+                        <a href="https://t.me/Prompts_library_bot" target="_blank" rel="noopener" class="pl-standalone-earn-btn">
+                            <span>Open Bot</span> <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Related Prompts Section for Googlebot Crawling & Internal Linking -->
+        <?php if (!empty($related_prompts)): ?>
+        <section class="pl-related-section" aria-label="Related Prompts">
+            <div class="pl-related-header">
+                <h2><i class="fa-solid fa-sparkles"></i> More <?php echo htmlspecialchars($auto_open_data['category']); ?> Prompts</h2>
+                <a href="https://rtmcreator.com/prompt-library/?category=<?php echo urlencode($auto_open_data['category']); ?>" class="pl-related-more-link">View Category <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="pl-related-grid">
+                <?php foreach ($related_prompts as $rp): ?>
+                <a href="<?php echo htmlspecialchars($rp['url']); ?>" class="pl-related-card">
+                    <div class="pl-related-img-wrap">
+                        <?php if ($rp['thumb']): ?>
+                            <img src="<?php echo htmlspecialchars($rp['thumb']); ?>" alt="<?php echo htmlspecialchars($rp['text_output'] ?: 'Related Prompt'); ?>" loading="lazy">
+                        <?php else: ?>
+                            <div class="pl-related-fallback-icon"><i class="fa-solid fa-quote-left"></i></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="pl-related-body">
+                        <div class="pl-related-title"><?php echo htmlspecialchars($rp['text_output'] ?: $rp['category'] . ' Prompt'); ?></div>
+                        <div class="pl-related-meta">by @<?php echo htmlspecialchars($rp['username']); ?></div>
+                    </div>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <!-- Transition to Full Library Exploration -->
+        <div class="pl-explore-divider" id="pl-catalog-anchor">
+            <button type="button" class="pl-explore-btn" onclick="plScrollToCatalog()">
+                <i class="fa-solid fa-compass"></i> Explore All <?php echo number_format($total_approved_count); ?>+ Community Prompts <i class="fa-solid fa-chevron-down"></i>
+            </button>
+        </div>
+    </div>
+    <?php endif; ?>
     <div id="pl-header">
         <h1>Prompt Library</h1>
         <p>Unlock the full potential of AI with our curated community library. Expertly crafted prompts for every creative need.</p>
@@ -1720,18 +2419,101 @@ function plCopy(e, btn, text, originalHtml = '📋 Copy') {
     });
 }
 
-function plShare(e, text, id) {
-    if (e) e.stopPropagation();
+function plSlugify(text) {
+    if (!text) return 'prompt';
+    return text.toString().toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 60) || 'prompt';
+}
+
+function getCleanPromptUrl(p) {
+    const slug = plSlugify(p.text_output || (p.category + ' Prompt'));
+    return window.location.origin + '/prompt-library/' + p.id + '/' + slug + '/';
+}
+
+function updateURL(id = null) {
+    try {
+        if (id) {
+            const p = allPrompts.find(x => x.id == id);
+            const slug = p ? plSlugify(p.text_output || (p.category + ' Prompt')) : 'prompt';
+            const cleanPath = '/prompt-library/' + id + '/' + slug + '/';
+            window.history.pushState({ promptId: id }, '', cleanPath);
+        } else {
+            const params = [];
+            if (activeFilter && activeFilter !== 'all' && activeFilter !== 'favs') {
+                params.push('category=' + encodeURIComponent(activeFilter));
+            }
+            if (searchTerm) {
+                params.push('search=' + encodeURIComponent(searchTerm));
+            }
+            if (activeCreator) {
+                params.push('creator=' + encodeURIComponent(activeCreator));
+            }
+            const query = params.length > 0 ? ('?' + params.join('&')) : '';
+            window.history.pushState(null, '', '/prompt-library/' + query);
+        }
+    } catch(e) {}
+}
+
+function plCopyDirect(btn, text) {
+    copyToClipboard(text, () => {
+        const oldHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        btn.style.background = '#10b981';
+        btn.style.borderColor = '#10b981';
+        setTimeout(() => {
+            btn.innerHTML = oldHtml;
+            btn.style.background = '';
+            btn.style.borderColor = '';
+        }, 2000);
+    }, () => {
+        alert('Prompt copied to clipboard!');
+    });
+}
+
+function plCopySnippet(btn, text) {
+    plCopyDirect(btn, text);
+}
+
+function plShareCustom(title, url) {
     const shareData = {
-        title: 'Awesome AI Prompt',
-        text: text,
-        url: window.location.origin + window.location.pathname + '?id=' + id
+        title: title || 'Awesome AI Prompt',
+        text: 'Check out this awesome AI prompt on AI Prompt Hub:',
+        url: url
     };
     if (navigator.share) {
         navigator.share(shareData).catch(() => {});
     } else {
-        copyToClipboard(shareData.url, () => {
-            alert('Prompt link copied to clipboard!');
+        copyToClipboard(url, () => {
+            alert('Clean prompt link copied to clipboard!');
+        });
+    }
+}
+
+function plScrollToCatalog() {
+    const el = document.getElementById('pl-header') || document.getElementById('pl-search-wrap');
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function plShare(e, text, id) {
+    if (e) e.stopPropagation();
+    const p = allPrompts.find(x => x.id == id);
+    const cleanUrl = p ? getCleanPromptUrl(p) : (window.location.origin + '/prompt-library/' + id + '/');
+    const shareData = {
+        title: text || 'Awesome AI Prompt',
+        text: 'Check out this awesome AI prompt on AI Prompt Hub:',
+        url: cleanUrl
+    };
+    if (navigator.share) {
+        navigator.share(shareData).catch(() => {});
+    } else {
+        copyToClipboard(cleanUrl, () => {
+            alert('Clean prompt link copied to clipboard!');
         });
     }
 }
@@ -1920,20 +2702,18 @@ document.addEventListener('keydown', (e) => {
     });
 })();
 
-// URL Parameters Sync
-function updateURL(openId = null) {
-    const params = new URLSearchParams();
-    if (openId) {
-        params.set('id', openId);
+// Popstate event for seamless Browser Back/Forward navigation with clean URLs
+window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.promptId) {
+        openPrompt(e.state.promptId);
     } else {
-        if (searchTerm) params.set('search', searchTerm);
-        if (activeFilter && activeFilter !== 'all') params.set('category', activeFilter);
-        if (activeCreator) params.set('creator', activeCreator);
+        const overlay = document.getElementById('pl-modal-overlay');
+        if (overlay && overlay.classList.contains('open')) {
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
     }
-    const queryString = params.toString();
-    const newURL = window.location.pathname + (queryString ? '?' + queryString : '');
-    window.history.pushState({}, '', newURL);
-}
+});
 
 // Filter grid by a specific creator (Portfolio mode)
 function filterByCreator(e, creator) {
@@ -2161,12 +2941,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Auto-open if ID in URL
+// Register current prompt in allPrompts list for modal interactions
 <?php if ($auto_open_data): ?>
     if (!allPrompts.find(x => x.id == <?php echo $auto_open_id; ?>)) {
         allPrompts.push(<?php echo json_encode($auto_open_data); ?>);
     }
-    openPrompt(<?php echo $auto_open_id; ?>);
 <?php endif; ?>
 
 </script>

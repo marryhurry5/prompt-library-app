@@ -1,0 +1,23 @@
+# ==============================================================================
+# AI PROMPT LIBRARY - APACHE REWRITE RULES FOR CLEAN GOOGLE SEO URLS
+# ==============================================================================
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /prompt-library/
+
+    # 1. XML Sitemap Route (/prompt-library/sitemap.xml -> sitemap.php)
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+    # 2. Never rewrite actual existing physical files, images, scripts, or directories
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 3. Clean Prompt URL with SEO slug:
+    # /prompt-library/142/cyberpunk-samurai-neon-city/ -> library.php?id=142&slug=cyberpunk-samurai-neon-city
+    RewriteRule ^([0-9]+)/([^/]+)/?$ library.php?id=$1&slug=$2 [L,QSA]
+
+    # 4. Clean Prompt URL with ID only:
+    # /prompt-library/142/ -> library.php?id=142
+    RewriteRule ^([0-9]+)/?$ library.php?id=$1 [L,QSA]
+</IfModule>

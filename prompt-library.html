@@ -1409,18 +1409,31 @@
     });
   }
 
+  function plSlugify(text) {
+    if (!text) return 'prompt';
+    return text.toString().toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 60) || 'prompt';
+  }
+
   function plShare(e, text, id) {
     if (e) e.stopPropagation();
+    const p = allPrompts.find(x => x.id == id);
+    const slug = p ? plSlugify(p.text_output || (p.category + ' Prompt')) : 'prompt';
+    const cleanUrl = window.location.origin + '/prompt-library/' + id + '/' + slug + '/';
     const shareData = {
-      title: 'Awesome AI Prompt',
-      text: text,
-      url: window.location.origin + window.location.pathname + '?id=' + id
+      title: text || 'Awesome AI Prompt',
+      text: text ? (text + ' - Check out this AI prompt:') : 'Awesome AI Prompt',
+      url: cleanUrl
     };
     if (navigator.share) {
       navigator.share(shareData).catch(() => {});
     } else {
       copyToClipboard(shareData.url, () => {
-        alert('Prompt link copied to clipboard!');
+        alert('Clean prompt link copied to clipboard!');
       });
     }
   }
