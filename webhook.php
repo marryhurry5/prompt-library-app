@@ -147,6 +147,96 @@ function checkAndRunWeeklyTopPost()
 }
 checkAndRunWeeklyTopPost();
 
+function postDailyLeaderboardToChannel($force = false)
+{
+    $today = date('Y-m-d');
+    if (!$force) {
+        $last_date = getSetting('last_daily_leaderboard_date', '');
+        if ($last_date === $today) {
+            return false; // Already posted today
+        }
+    }
+
+    $top_creators = getDailyTopCreators(5);
+    if (empty($top_creators)) {
+        return false;
+    }
+
+    $date_formatted = date('d M Y');
+
+    $msg = "🏆 <b>DAILY CREATOR LEADERBOARD ({$date_formatted})</b> 🏆\n\n";
+    $msg .= "Here are today's top prompt creators who submitted prompts and earned money:\n\n";
+
+    $medals = ['🥇', '🥈', '🥉', '🎖', '🎖'];
+    $rank = 1;
+
+    foreach ($top_creators as $c) {
+        $medal = $medals[$rank - 1] ?? '🎖';
+        $raw_uname = trim($c['username'] ?? '');
+        if (empty($raw_uname)) {
+            $raw_uname = "Creator_" . substr((string)$c['telegram_id'], -4);
+        }
+        if (strpos($raw_uname, '@') !== 0 && !str_starts_with($raw_uname, 'Creator_')) {
+            $raw_uname = '@' . $raw_uname;
+        }
+        $uname_safe = htmlspecialchars($raw_uname);
+        $count = (int)$c['prompt_count'];
+        $earned = (float)$c['earned_amt'];
+        $earned_fmt = number_format($earned, 2);
+        $prompt_word = ($count === 1) ? "prompt" : "prompts";
+
+        $msg .= "{$medal} <b>{$uname_safe}</b> — <b>{$count} {$prompt_word}</b> (Earned <b>₹{$earned_fmt}</b> 💰)\n";
+        $rank++;
+    }
+
+    $first_bounty = getSetting('first_prompt_reward_amount', '5.00');
+
+    $msg .= "\n━━━━━━━━━━━━━━━━━━━━\n";
+    $msg .= "💡 <b>Want to earn real cash like them?</b>\n";
+    $msg .= "Submit your creative AI prompts (ChatGPT, Midjourney, Bing, Flux) and get paid cash for every approved post!\n\n";
+    $msg .= "🎁 <b>New Creator Offer:</b> Earn an instant <b>₹{$first_bounty} Welcome Bonus</b> on your 1st approved prompt!\n";
+    $msg .= "💸 Instant withdrawals directly to your UPI / GPay / Paytm.\n\n";
+    $msg .= "👇 <i>Tap the button below to submit your prompt now!</i>";
+
+    $keyboard = [
+        'inline_keyboard' => [
+            [['text' => '🚀 Submit Prompt & Earn Money 💰', 'url' => 'https://t.me/Prompts_library_bot?start=ref_channel']],
+            [['text' => '🌐 View Prompt Library', 'url' => 'https://rtmcreator.com/prompt-library/']]
+        ]
+    ];
+
+    $res = apiRequest("sendMessage", [
+        'chat_id'      => CHANNEL_ID,
+        'text'         => $msg,
+        'parse_mode'   => 'HTML',
+        'reply_markup' => $keyboard
+    ]);
+
+    if ($res && isset($res['ok']) && $res['ok'] === true) {
+        setSetting('last_daily_leaderboard_date', $today);
+        return true;
+    }
+    return false;
+}
+
+function checkAndRunDailyLeaderboardPost()
+{
+    $current_hour = (int)date('H'); // IST 0-23
+    // Send at or after 8:00 PM IST (20:00)
+    if ($current_hour < 20) {
+        return false;
+    }
+
+    $today = date('Y-m-d');
+    $last_date = getSetting('last_daily_leaderboard_date', '');
+    if ($last_date === $today) {
+        return false; // Already posted today
+    }
+
+    return postDailyLeaderboardToChannel(false);
+}
+checkAndRunDailyLeaderboardPost();
+
 function checkAndRunScheduledPosts()
 {
     $scheduled = getScheduledPosts();
@@ -331,13 +421,24 @@ function processMessage($message)
         logUserActivity($telegram_id, $username, '/start', $step, 'User started bot');
 
         $channel_username = CHANNEL_USERNAME;
-        $welcome = "🌟 <b>Welcome to the Prompt Marketplace!</b> 🌟\n\n";
+        $user_approved_count = getUserApprovedPromptCount($telegram_id);
+        $first_bounty = getSetting('first_prompt_reward_amount', '5.00');
+
+        $welcome = "🌟 <b>Welcome to the AI Prompt Marketplace!</b> 🌟\n\n";
+        if ($user_approved_count === 0) {
+            $welcome .= "🎁 <b>SPECIAL WELCOME OFFER:</b>\n";
+            $welcome .= "Submit your first prompt today and earn an instant <b>₹{$first_bounty} WELCOME BONUS</b> upon approval! 💰\n\n";
+        }
         $welcome .= "Submit your best AI Art, ChatGPT, or creative prompts to get featured in our official channel: <a href='https://t.me/{$channel_username}'>@" . CHANNEL_USERNAME . "</a>\n\n";
-        $welcome .= "<b>How to use this bot:</b>\n";
-        $welcome .= "1️⃣ Use /submit to upload your prompt results (Image/Video/Text).\n";
-        $welcome .= "2️⃣ Provide the exact prompt you used.\n";
-        $welcome .= "3️⃣ Wait for admins to approve your post.\n";
-        $welcome .= "4️⃣ Earn ₹ when your prompt gets published!\n\n";
+        $welcome .= "<b>How to earn with this bot:</b>\n";
+        $welcome .= "1️⃣ Use /submit to choose a category & upload your prompt.\n";
+        $welcome .= "2️⃣ Provide the prompt text & AI tool used.\n";
+        $welcome .= "3️⃣ Admins review & feature your post on the channel.\n";
+        if ($user_approved_count === 0) {
+            $welcome .= "4️⃣ <b>Instantly receive ₹{$first_bounty}</b> on your first approved prompt! 🚀\n\n";
+        } else {
+            $welcome .= "4️⃣ Earn cash for every approved prompt straight to your wallet!\n\n";
+        }
         $welcome .= "<b>Quick Menu:</b>\n<i>Choose an option below to get started!</i>";
 
         // Update command menu for the user
@@ -391,10 +492,12 @@ function processMessage($message)
         $help .= "🚀 <b>1. How to Submit</b>\n";
         $help .= "Use /submit and follow the steps. You can upload <b>Images, Videos, or Text</b>. All submissions are reviewed by admins before being posted to @ai_prompt_store.\n\n";
         
+        $first_reward_amt = getSetting('first_prompt_reward_amount', '5.00');
         $prompt_reward_amt = getSetting('prompt_reward_amount', '0.50');
-        $help .= "• <b>Approved Post:</b> +₹{$prompt_reward_amt}\n";
+        $help .= "• <b>1st Approved Prompt:</b> +₹{$first_reward_amt} (🎁 Welcome Bounty!)\n";
+        $help .= "• <b>Regular Approved Post:</b> +₹{$prompt_reward_amt}\n";
         $ref_reward_amt = getSetting('referral_reward_amount', '1.00');
-        $help .= "• <b>Daily Challenge:</b> +₹1.00 (if approved)\n";
+        $help .= "• <b>Daily Challenge:</b> 2x Double Reward (if approved)\n";
         $help .= "• <b>Daily Check-in:</b> +₹0.10 to ₹0.40/day (Streak rewards)\n";
         $help .= "• <b>Referrals:</b> +₹{$ref_reward_amt} for both you and your friend!\n\n";
         
@@ -931,9 +1034,16 @@ function processMessage($message)
         createNewDraft($telegram_id);
 
         $keyboard = buildCategoryKeyboard();
+        $user_approved = getUserApprovedPromptCount($telegram_id);
+        $first_bounty_banner = "";
+        if ($user_approved === 0) {
+            $first_bounty_amt = getSetting('first_prompt_reward_amount', '5.00');
+            $first_bounty_banner = "🎁 <b>FIRST PROMPT BOUNTY ACTIVE:</b>\nEarn <b>₹{$first_bounty_amt}</b> when this first prompt is approved!\n\n";
+        }
+
         apiRequest("sendMessage", [
             'chat_id' => $chat_id,
-            'text' => "[🟩⬜⬜⬜] <b>Step 1 of 4: Select Category</b>\n\nPlease select a category for your prompt:\n<i>Example: Photo Editing, AI Art</i>",
+            'text' => "{$first_bounty_banner}[🟩⬜⬜⬜] <b>Step 1 of 4: Select Category</b>\n\nPlease select a category for your prompt:\n<i>Example: Photo Editing, AI Art</i>",
             'parse_mode' => 'HTML',
             'reply_markup' => $keyboard
         ]);
@@ -1187,6 +1297,27 @@ function processMessage($message)
         apiRequest("sendMessage", [
             'chat_id'    => $chat_id,
             'text'       => "✅ <b>Per Prompt Submission Reward Updated!</b>\n\nNew reward: <b>₹" . number_format($amount, 2) . "</b> per approved prompt submission.",
+            'parse_mode' => 'HTML'
+        ]);
+        return;
+    }
+
+    if ($step === 'admin_awaiting_first_prompt_reward' && isAdmin($telegram_id)) {
+        if ($text === '/cancel') {
+            updateUserStep($telegram_id, 'none');
+            apiRequest("sendMessage", ['chat_id' => $chat_id, 'text' => "❌ Cancelled setting first prompt reward."]);
+            return;
+        }
+        $amount = round((float)preg_replace('/[^0-9.]/', '', $text), 2);
+        if ($amount <= 0 || $amount > 500) {
+            apiRequest("sendMessage", ['chat_id' => $chat_id, 'text' => "⚠️ Invalid amount. Please enter a value between 0.01 and 500.00."]);
+            return;
+        }
+        setSetting('first_prompt_reward_amount', number_format($amount, 2, '.', ''));
+        updateUserStep($telegram_id, 'none');
+        apiRequest("sendMessage", [
+            'chat_id'    => $chat_id,
+            'text'       => "✅ <b>First Prompt Welcome Reward Updated!</b>\n\nNew 1st prompt bounty: <b>₹" . number_format($amount, 2) . "</b> upon first approved prompt submission.",
             'parse_mode' => 'HTML'
         ]);
         return;
@@ -2006,10 +2137,18 @@ function processMessage($message)
         }
 
         $reward_str = "";
+        $is_first_prompt = false;
         if ($was_pending) {
-            $prompt_reward = (float)getSetting('prompt_reward_amount', '0.25');
+            $user_approved_total = getUserApprovedPromptCount($target['telegram_id']);
+            $is_first_prompt = ($user_approved_total <= 1);
+            $first_prompt_reward = (float)getSetting('first_prompt_reward_amount', '5.00');
+            $prompt_reward = (float)getSetting('prompt_reward_amount', '0.50');
             $challenge_reward = $prompt_reward * 2;
-            if ($target['is_challenge']) {
+
+            if ($is_first_prompt) {
+                addBalance($target['telegram_id'], $first_prompt_reward, 'CREDIT', 'FIRST_PROMPT_BONUS', "First Prompt Welcome Bounty #$draft_id");
+                $reward_str = "₹" . number_format($first_prompt_reward, 2) . " (🎁 1st Prompt Welcome Bounty!)";
+            } elseif (!empty($target['is_challenge'])) {
                 addBalance($target['telegram_id'], $challenge_reward, 'CREDIT', 'PROMPT_APPROVAL', "Prompt #$draft_id approved (2x Trending Bonus)");
                 $reward_str = "₹" . number_format($challenge_reward, 2) . " (🔥 2x Trending Bonus!)";
             } else {
@@ -2028,11 +2167,25 @@ function processMessage($message)
         apiRequest("sendMessage", ['chat_id' => $chat_id, 'text' => "✅ <b>Post #$draft_id Scheduled!</b>\n\nScheduled time: <b>$slot_formatted (IST)</b>", 'parse_mode' => 'HTML']);
         
         if ($was_pending) {
-            apiRequest("sendMessage", [
-                'chat_id' => $target['telegram_id'], 
-                'text' => "🎉 <b>Congratulations!</b>\n\nYour prompt submission was approved and scheduled for <b>$slot_formatted (IST)</b>. You earned <b>{$reward_str}</b>!",
-                'parse_mode' => 'HTML'
-            ]);
+            if ($is_first_prompt) {
+                $bal_now = number_format(getBalance($target['telegram_id']), 2);
+                $congrats_sched = "🎉 <b>CONGRATULATIONS! FIRST PROMPT APPROVED!</b> 🎁\n\n" .
+                    "Your first prompt was approved and scheduled for <b>$slot_formatted (IST)</b>.\n\n" .
+                    "💰 <b>Welcome Bounty Credited:</b> You earned <b>₹" . number_format($first_prompt_reward, 2) . "</b>!\n" .
+                    "💵 Current Balance: <b>₹{$bal_now}</b>\n\n" .
+                    "🚀 <i>You're on your way to the ₹20.00 minimum UPI withdrawal! Keep submitting more prompts to cash out!</i>";
+                apiRequest("sendMessage", [
+                    'chat_id' => $target['telegram_id'], 
+                    'text' => $congrats_sched,
+                    'parse_mode' => 'HTML'
+                ]);
+            } else {
+                apiRequest("sendMessage", [
+                    'chat_id' => $target['telegram_id'], 
+                    'text' => "🎉 <b>Congratulations!</b>\n\nYour prompt submission was approved and scheduled for <b>$slot_formatted (IST)</b>. You earned <b>{$reward_str}</b>!",
+                    'parse_mode' => 'HTML'
+                ]);
+            }
         } else {
             apiRequest("sendMessage", [
                 'chat_id' => $target['telegram_id'], 
@@ -3017,13 +3170,20 @@ function processCallbackQuery($callback)
             }
 
             updateSubmissionStatus($draft_id, 'approved');
-            $prompt_reward = (float)getSetting('prompt_reward_amount', '0.25');
+            $user_approved_total = getUserApprovedPromptCount($target_draft['telegram_id']);
+            $is_first_prompt = ($user_approved_total === 1);
+            $first_prompt_reward = (float)getSetting('first_prompt_reward_amount', '5.00');
+            $prompt_reward = (float)getSetting('prompt_reward_amount', '0.50');
             $challenge_reward = $prompt_reward * 2;
-            if ($target_draft['is_challenge']) {
-                addBalance($target_draft['telegram_id'], $challenge_reward);
+
+            if ($is_first_prompt) {
+                addBalance($target_draft['telegram_id'], $first_prompt_reward, 'CREDIT', 'FIRST_PROMPT_BONUS', "First Prompt Welcome Bounty #$draft_id");
+                $reward_str = "₹" . number_format($first_prompt_reward, 2) . " (🎁 1st Prompt Welcome Bounty!)";
+            } elseif (!empty($target_draft['is_challenge'])) {
+                addBalance($target_draft['telegram_id'], $challenge_reward, 'CREDIT', 'PROMPT_APPROVAL', "Prompt #$draft_id approved (2x Trending Bonus)");
                 $reward_str = "₹" . number_format($challenge_reward, 2) . " (🔥 2x Trending Bonus!)";
             } else {
-                addBalance($target_draft['telegram_id'], $prompt_reward);
+                addBalance($target_draft['telegram_id'], $prompt_reward, 'CREDIT', 'PROMPT_APPROVAL', "Prompt #$draft_id approved");
                 $reward_str = "₹" . number_format($prompt_reward, 2);
             }
             handleReferralReward($target_draft['telegram_id']);
@@ -3059,7 +3219,19 @@ function processCallbackQuery($callback)
 
             apiRequest("editMessageReplyMarkup", ['chat_id' => $chat_id, 'message_id' => $message_id, 'reply_markup' => json_encode(['inline_keyboard' => []])]);
             apiRequest("sendMessage", ['chat_id' => $chat_id, 'text' => "✅ Post #$draft_id approved and published."]);
-            apiRequest("sendMessage", ['chat_id' => $target_draft['telegram_id'], 'text' => "🎉 Congratulations! Your prompt submission was approved and posted to the channel. You earned <b>{$reward_str}</b>!", 'parse_mode' => 'HTML']);
+            
+            if ($is_first_prompt) {
+                $bal_now = number_format(getBalance($target_draft['telegram_id']), 2);
+                $channel_name = CHANNEL_USERNAME;
+                $user_congrats = "🎉 <b>CONGRATULATIONS! FIRST PROMPT APPROVED!</b> 🎁\n\n" .
+                    "Your very first prompt submission has been approved and published to @{$channel_name}!\n\n" .
+                    "💰 <b>Welcome Bounty Credited:</b> You earned <b>₹" . number_format($first_prompt_reward, 2) . "</b>!\n" .
+                    "💵 Current Wallet Balance: <b>₹{$bal_now}</b>\n\n" .
+                    "🚀 <i>You are already on your way to the ₹20.00 minimum UPI withdrawal! Keep submitting quality prompts to cash out!</i>";
+                apiRequest("sendMessage", ['chat_id' => $target_draft['telegram_id'], 'text' => $user_congrats, 'parse_mode' => 'HTML']);
+            } else {
+                apiRequest("sendMessage", ['chat_id' => $target_draft['telegram_id'], 'text' => "🎉 Congratulations! Your prompt submission was approved and posted to the channel. You earned <b>{$reward_str}</b>!", 'parse_mode' => 'HTML']);
+            }
             
             $admin_label = getAdminDisplayName($telegram_id, $from);
             $post_title = htmlspecialchars(mb_substr($target_draft['text_output'] ?: $target_draft['category'], 0, 35, 'UTF-8'));
@@ -3200,10 +3372,18 @@ function processCallbackQuery($callback)
         }
 
         $reward_str = "";
+        $is_first_prompt = false;
         if ($was_pending) {
-            $prompt_reward = (float)getSetting('prompt_reward_amount', '0.25');
+            $user_approved_total = getUserApprovedPromptCount($target['telegram_id']);
+            $is_first_prompt = ($user_approved_total <= 1);
+            $first_prompt_reward = (float)getSetting('first_prompt_reward_amount', '5.00');
+            $prompt_reward = (float)getSetting('prompt_reward_amount', '0.50');
             $challenge_reward = $prompt_reward * 2;
-            if ($target['is_challenge']) {
+
+            if ($is_first_prompt) {
+                addBalance($target['telegram_id'], $first_prompt_reward, 'CREDIT', 'FIRST_PROMPT_BONUS', "First Prompt Welcome Bounty #$draft_id");
+                $reward_str = "₹" . number_format($first_prompt_reward, 2) . " (🎁 1st Prompt Welcome Bounty!)";
+            } elseif (!empty($target['is_challenge'])) {
                 addBalance($target['telegram_id'], $challenge_reward, 'CREDIT', 'PROMPT_APPROVAL', "Prompt #$draft_id approved (2x Trending Bonus)");
                 $reward_str = "₹" . number_format($challenge_reward, 2) . " (🔥 2x Trending Bonus!)";
             } else {
@@ -3227,11 +3407,25 @@ function processCallbackQuery($callback)
         ]);
         
         if ($was_pending) {
-            apiRequest("sendMessage", [
-                'chat_id' => $target['telegram_id'], 
-                'text' => "🎉 <b>Congratulations!</b>\n\nYour prompt submission was approved and scheduled for <b>$slot_formatted (IST)</b>. You earned <b>{$reward_str}</b>!",
-                'parse_mode' => 'HTML'
-            ]);
+            if ($is_first_prompt) {
+                $bal_now = number_format(getBalance($target['telegram_id']), 2);
+                $congrats_sched = "🎉 <b>CONGRATULATIONS! FIRST PROMPT APPROVED!</b> 🎁\n\n" .
+                    "Your first prompt was approved and scheduled for <b>$slot_formatted (IST)</b>.\n\n" .
+                    "💰 <b>Welcome Bounty Credited:</b> You earned <b>₹" . number_format($first_prompt_reward, 2) . "</b>!\n" .
+                    "💵 Current Balance: <b>₹{$bal_now}</b>\n\n" .
+                    "🚀 <i>You're on your way to the ₹20.00 minimum UPI withdrawal! Keep submitting more prompts to cash out!</i>";
+                apiRequest("sendMessage", [
+                    'chat_id' => $target['telegram_id'], 
+                    'text' => $congrats_sched,
+                    'parse_mode' => 'HTML'
+                ]);
+            } else {
+                apiRequest("sendMessage", [
+                    'chat_id' => $target['telegram_id'], 
+                    'text' => "🎉 <b>Congratulations!</b>\n\nYour prompt submission was approved and scheduled for <b>$slot_formatted (IST)</b>. You earned <b>{$reward_str}</b>!",
+                    'parse_mode' => 'HTML'
+                ]);
+            }
         } else {
             apiRequest("sendMessage", [
                 'chat_id' => $target['telegram_id'], 
@@ -3589,6 +3783,43 @@ function processCallbackQuery($callback)
                 'parse_mode'   => 'HTML',
                 'reply_markup' => $kb
             ]);
+            return;
+        }
+
+        if ($panel_action === 'first_prompt_reward') {
+            $current = getSetting('first_prompt_reward_amount', '5.00');
+            updateUserStep($telegram_id, 'admin_awaiting_first_prompt_reward');
+            $kb = ['inline_keyboard' => [[['text' => '❌ Cancel', 'callback_data' => 'cmd_cancel']]]];
+            apiRequest("sendMessage", [
+                'chat_id'      => $chat_id,
+                'text'         => "🎁 <b>Set First Prompt Welcome Bounty</b>\n\n<b>Current:</b> ₹{$current} for 1st approved prompt\n\nSend the new welcome reward amount (e.g. <code>5.00</code>, <code>3.00</code>, <code>10.00</code>):\n<i>New creators receive this bounty upon having their very first prompt approved!</i>",
+                'parse_mode'   => 'HTML',
+                'reply_markup' => $kb
+            ]);
+            return;
+        }
+
+        if ($panel_action === 'post_daily_lb') {
+            $success = postDailyLeaderboardToChannel(true);
+            if ($success) {
+                apiRequest("answerCallbackQuery", [
+                    'callback_query_id' => $callback_id,
+                    'text' => "✅ Daily Leaderboard has been published to the channel!",
+                    'show_alert' => true
+                ]);
+                $channel_name = CHANNEL_USERNAME;
+                apiRequest("sendMessage", [
+                    'chat_id' => $chat_id,
+                    'text' => "🏆 <b>Success!</b> Daily Leaderboard notification was dispatched to @{$channel_name}!",
+                    'parse_mode' => 'HTML'
+                ]);
+            } else {
+                apiRequest("answerCallbackQuery", [
+                    'callback_query_id' => $callback_id,
+                    'text' => "⚠️ Could not post leaderboard. Please ensure creators exist and the bot is an admin in the channel.",
+                    'show_alert' => true
+                ]);
+            }
             return;
         }
 
@@ -4131,16 +4362,20 @@ function sendAdminPanel($chat_id, $message_id = null) {
                 ['text' => "⚙️ Ref Reward",        'callback_data' => 'admin_panel_ref_reward']
             ],
             [
-                ['text' => "💵 Prompt Reward",     'callback_data' => 'admin_panel_prompt_reward'],
-                ['text' => "🚫 Banned Users",      'callback_data' => 'admin_panel_banned']
+                ['text' => "💵 Regular Reward",    'callback_data' => 'admin_panel_prompt_reward'],
+                ['text' => "🎁 1st Prompt Bonus",  'callback_data' => 'admin_panel_first_prompt_reward']
+            ],
+            [
+                ['text' => "🚫 Banned Users",      'callback_data' => 'admin_panel_banned'],
+                ['text' => "💳 User Wallet",       'callback_data' => 'admin_panel_wallet_menu']
             ],
             [
                 ['text' => "📅 Calendar" . ($sched_count > 0 ? " ($sched_count)" : ""), 'callback_data' => 'admin_panel_calendar'],
                 ['text' => "⏰ Schedule Gap ({$sched_gap}h)", 'callback_data' => 'admin_panel_sched_gap']
             ],
             [
-                ['text' => "💳 User Wallet", 'callback_data' => 'admin_panel_wallet_menu'],
-                ['text' => $tickets_label,   'callback_data' => 'admin_panel_tickets']
+                ['text' => $tickets_label,          'callback_data' => 'admin_panel_tickets'],
+                ['text' => "🏆 Post Daily LB",     'callback_data' => 'admin_panel_post_daily_lb']
             ],
             [
                 ['text' => $maint_btn_label, 'callback_data' => 'admin_panel_maint_menu']
@@ -4890,8 +5125,13 @@ function sendToAdmin($draft_id, $username)
         $safe_prompt .= '...';
 
     $header = "🚨 <b>NEW SUBMISSION: #{$draft_id}</b> 🚨\n\n";
+    $user_approved_count = getUserApprovedPromptCount($draft['telegram_id']);
+    if ($user_approved_count === 0) {
+        $first_bounty = getSetting('first_prompt_reward_amount', '5.00');
+        $header .= "🎁 <b>FIRST-TIME CREATOR SUBMISSION!</b> (Eligible for ₹{$first_bounty} First Prompt Bonus upon approval)\n\n";
+    }
     if (!empty($draft['is_challenge'])) {
-        $p_rew = (float)getSetting('prompt_reward_amount', '0.25');
+        $p_rew = (float)getSetting('prompt_reward_amount', '0.50');
         $c_rew = $p_rew * 2;
         $c_fmt = number_format($c_rew, 2);
         $header .= "🔥 <b>TRENDING CHALLENGE MATCH! (2x Double Reward: ₹{$c_fmt})</b>\n\n";
@@ -5362,9 +5602,16 @@ function sendBalanceDashboard($chat_id, $telegram_id, $username) {
     $lifetime_fmt = number_format($lifetime_earnings, 2);
     $ref_fmt = number_format($ref_earnings, 2);
 
+    $min_wd = 20.00;
+    $progress_pct = min(100, max(0, round(($bal / $min_wd) * 100)));
+    $filled_blocks = min(5, (int)round(($progress_pct / 100) * 5));
+    $empty_blocks = 5 - $filled_blocks;
+    $progress_bar = str_repeat('🟩', $filled_blocks) . str_repeat('⬜', $empty_blocks);
+
     $msg = "💰 <b>ACCOUNT BALANCE & EARNINGS DASHBOARD</b>\n\n" .
            "👤 Creator: <b>" . htmlspecialchars($username) . "</b> (Rank <b>#{$rank}</b>)\n\n" .
            "💵 <b>Available Wallet Balance:</b> ₹{$bal_fmt}\n" .
+           "📈 <b>Withdrawal Goal:</b> [{$progress_bar}] <b>{$progress_pct}%</b> (₹{$bal_fmt} / ₹20.00)\n" .
            "💸 <b>Total Withdrawn:</b> ₹{$withdrawn_fmt}\n" .
            "🏆 <b>Lifetime Earnings:</b> ₹{$lifetime_fmt}\n\n" .
            "📊 <b>Activity Breakdown:</b>\n" .

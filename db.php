@@ -533,6 +533,102 @@ function getWeeklyTopCreators($limit = 3) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+function getDailyTopCreators($limit = 5) {
+    global $pdo;
+    $limit = (int)$limit;
+    try {
+        // Fetch creators with approved prompts in the last 24 hours
+        $stmt = $pdo->prepare("
+            SELECT 
+                COALESCE(NULLIF(u.username, ''), CONCAT('Creator_', SUBSTR(u.telegram_id, -4))) AS username,
+                s.telegram_id,
+                COUNT(s.id) AS prompt_count,
+                COALESCE(
+                    (SELECT SUM(mt.amount) 
+                     FROM money_transactions mt 
+                     WHERE mt.telegram_id = s.telegram_id 
+                       AND mt.source IN ('PROMPT_APPROVAL', 'FIRST_PROMPT_BONUS')
+                       AND (DATE(mt.created_at) = CURDATE() OR mt.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR))
+                    ),
+                    COUNT(s.id) * 0.50
+                ) AS earned_amt
+            FROM submissions s
+            JOIN users u ON s.telegram_id = u.telegram_id
+            WHERE s.status = 'approved'
+              AND (DATE(s.created_at) = CURDATE() 
+                   OR (s.scheduled_at IS NOT NULL AND DATE(s.scheduled_at) = CURDATE())
+                   OR s.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR))
+            GROUP BY s.telegram_id, u.username
+            ORDER BY prompt_count DESC, earned_amt DESC
+            LIMIT :limit
+        ");
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fallback 1: Showcase top creators from last 7 days so leaderboard is never empty
+        if (empty($results)) {
+            $fallback_stmt = $pdo->prepare("
+                SELECT 
+                    COALESCE(NULLIF(u.username, ''), CONCAT('Creator_', SUBSTR(u.telegram_id, -4))) AS username,
+                    s.telegram_id,
+                    COUNT(s.id) AS prompt_count,
+                    COALESCE(
+                        (SELECT SUM(mt.amount) 
+                         FROM money_transactions mt 
+                         WHERE mt.telegram_id = s.telegram_id 
+                           AND mt.source IN ('PROMPT_APPROVAL', 'FIRST_PROMPT_BONUS')
+                           AND mt.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                        ),
+                        COUNT(s.id) * 0.50
+                    ) AS earned_amt
+                FROM submissions s
+                JOIN users u ON s.telegram_id = u.telegram_id
+                WHERE s.status = 'approved'
+                  AND s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                GROUP BY s.telegram_id, u.username
+                ORDER BY prompt_count DESC, earned_amt DESC
+                LIMIT :limit
+            ");
+            $fallback_stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $fallback_stmt->execute();
+            $results = $fallback_stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        // Fallback 2: Showcase all-time active creators if needed
+        if (empty($results)) {
+            $alltime_stmt = $pdo->prepare("
+                SELECT 
+                    COALESCE(NULLIF(u.username, ''), CONCAT('Creator_', SUBSTR(u.telegram_id, -4))) AS username,
+                    s.telegram_id,
+                    COUNT(s.id) AS prompt_count,
+                    COALESCE(
+                        (SELECT SUM(mt.amount) 
+                         FROM money_transactions mt 
+                         WHERE mt.telegram_id = s.telegram_id 
+                           AND mt.source IN ('PROMPT_APPROVAL', 'FIRST_PROMPT_BONUS')
+                        ),
+                        COUNT(s.id) * 0.50
+                    ) AS earned_amt
+                FROM submissions s
+                JOIN users u ON s.telegram_id = u.telegram_id
+                WHERE s.status = 'approved'
+                GROUP BY s.telegram_id, u.username
+                ORDER BY prompt_count DESC, earned_amt DESC
+                LIMIT :limit
+            ");
+            $alltime_stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $alltime_stmt->execute();
+            $results = $alltime_stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $results;
+    } catch (Exception $e) {
+        error_log("getDailyTopCreators Error: " . $e->getMessage());
+        return [];
+    }
+}
+
 function getStats() {
     global $pdo;
     $stats = [];
@@ -1847,4 +1943,15 @@ function checkAndAwardStreakFreeze($telegram_id) {
         return true;
     }
     return false;
+}
+
+function getUserApprovedPromptCount($telegram_id) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM submissions WHERE telegram_id = ? AND status = 'approved'");
+        $stmt->execute([(int)$telegram_id]);
+        return (int)$stmt->fetchColumn();
+    } catch (Exception $e) {
+        return 0;
+    }
 }

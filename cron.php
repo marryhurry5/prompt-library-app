@@ -379,6 +379,97 @@ function runDailyStreakSaverReminders()
 }
 // ───────────────────────────────────────────────────────────────────────────
 
+// ─── postDailyLeaderboardToChannel (8:00 PM IST Channel Leaderboard Post) ────
+function postDailyLeaderboardToChannel($force = false)
+{
+    $today = date('Y-m-d');
+    if (!$force) {
+        $last_date = getSetting('last_daily_leaderboard_date', '');
+        if ($last_date === $today) {
+            return false;
+        }
+    }
+
+    $top_creators = getDailyTopCreators(5);
+    if (empty($top_creators)) {
+        return false;
+    }
+
+    $date_formatted = date('d M Y');
+
+    $msg = "🏆 <b>DAILY CREATOR LEADERBOARD ({$date_formatted})</b> 🏆\n\n";
+    $msg .= "Here are today's top prompt creators who submitted prompts and earned money:\n\n";
+
+    $medals = ['🥇', '🥈', '🥉', '🎖', '🎖'];
+    $rank = 1;
+
+    foreach ($top_creators as $c) {
+        $medal = $medals[$rank - 1] ?? '🎖';
+        $raw_uname = trim($c['username'] ?? '');
+        if (empty($raw_uname)) {
+            $raw_uname = "Creator_" . substr((string)$c['telegram_id'], -4);
+        }
+        if (strpos($raw_uname, '@') !== 0 && !str_starts_with($raw_uname, 'Creator_')) {
+            $raw_uname = '@' . $raw_uname;
+        }
+        $uname_safe = htmlspecialchars($raw_uname);
+        $count = (int)$c['prompt_count'];
+        $earned = (float)$c['earned_amt'];
+        $earned_fmt = number_format($earned, 2);
+        $prompt_word = ($count === 1) ? "prompt" : "prompts";
+
+        $msg .= "{$medal} <b>{$uname_safe}</b> — <b>{$count} {$prompt_word}</b> (Earned <b>₹{$earned_fmt}</b> 💰)\n";
+        $rank++;
+    }
+
+    $first_bounty = getSetting('first_prompt_reward_amount', '5.00');
+
+    $msg .= "\n━━━━━━━━━━━━━━━━━━━━\n";
+    $msg .= "💡 <b>Want to earn real cash like them?</b>\n";
+    $msg .= "Submit your creative AI prompts (ChatGPT, Midjourney, Bing, Flux) and get paid cash for every approved post!\n\n";
+    $msg .= "🎁 <b>New Creator Offer:</b> Earn an instant <b>₹{$first_bounty} Welcome Bonus</b> on your 1st approved prompt!\n";
+    $msg .= "💸 Instant withdrawals directly to your UPI / GPay / Paytm.\n\n";
+    $msg .= "👇 <i>Tap the button below to submit your prompt now!</i>";
+
+    $keyboard = [
+        'inline_keyboard' => [
+            [['text' => '🚀 Submit Prompt & Earn Money 💰', 'url' => 'https://t.me/Prompts_library_bot?start=ref_channel']],
+            [['text' => '🌐 View Prompt Library', 'url' => 'https://rtmcreator.com/prompt-library/']]
+        ]
+    ];
+
+    $res = apiRequest("sendMessage", [
+        'chat_id'      => CHANNEL_ID,
+        'text'         => $msg,
+        'parse_mode'   => 'HTML',
+        'reply_markup' => $keyboard
+    ]);
+
+    if ($res && isset($res['ok']) && $res['ok'] === true) {
+        setSetting('last_daily_leaderboard_date', $today);
+        return true;
+    }
+    return false;
+}
+
+function checkAndRunDailyLeaderboardPost()
+{
+    $current_hour = (int)date('H'); // IST 0-23
+    // Send at or after 8:00 PM IST (20:00)
+    if ($current_hour < 20) {
+        return false;
+    }
+
+    $today = date('Y-m-d');
+    $last_date = getSetting('last_daily_leaderboard_date', '');
+    if ($last_date === $today) {
+        return false; // Already posted today
+    }
+
+    return postDailyLeaderboardToChannel(false);
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 // ─── MAIN: Run the scheduler ────────────────────────────────────────────────
 $scheduled = getScheduledPosts();
 $published = 0;
@@ -431,4 +522,7 @@ if ($active_broadcast) {
 // ─── 8:00 PM IST STREAK SAVER REMINDER ENGINE ──────────────────────────────
 $reminders_sent = runDailyStreakSaverReminders();
 
-echo "✅ Cron ran at $now_ist (IST). Published: $published post(s). Reminders sent: $reminders_sent.";
+// ─── 8:00 PM IST DAILY CHANNEL LEADERBOARD ENGINE ──────────────────────────
+$daily_lb_sent = checkAndRunDailyLeaderboardPost();
+
+echo "✅ Cron ran at $now_ist (IST). Published: $published post(s). Reminders sent: $reminders_sent. Daily LB: " . ($daily_lb_sent ? 'Sent' : 'Skipped') . ".";
