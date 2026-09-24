@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.rtmcreator.promptlibrary"
+    namespace = "com.rtmcreator.aiprompthub"
     compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
@@ -26,11 +26,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.rtmcreator.promptlibrary"
+        applicationId = "com.rtmcreator.aiprompthub"
         minSdk = 21
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 6
+        versionName = "1.0.3"
     }
 
     signingConfigs {

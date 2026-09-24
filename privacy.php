@@ -168,7 +168,7 @@
         <div class="header">
             <div class="badge">Official Policy</div>
             <h1>Privacy Policy</h1>
-            <div class="effective-date">Application: <strong>AI Prompt Hub</strong> (com.rtmcreator.promptlibrary) | Last Updated: September 2026</div>
+            <div class="effective-date">Application: <strong>AI Prompt Hub</strong> (com.rtmcreator.aiprompthub) | Last Updated: September 2026</div>
         </div>
 
         <p>This Privacy Policy explains how <strong>AI Prompt Hub</strong> ("we", "our", or "the App") collects, uses, and discloses information when you use our mobile application and connected backend services.</p>
