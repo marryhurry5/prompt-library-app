@@ -15,7 +15,7 @@ if (!defined('BOT_BASE_URL')) {
 if (isset($_GET['action']) && $_GET['action'] === 'version_check') {
     echo json_encode([
         'success' => true,
-        'latest_version' => '1.0.3',
+        'latest_version' => '1.0.4',
         'min_supported_version' => '1.0.0',
         'force_update' => false,
         'update_url' => BOT_BASE_URL . 'api.php?action=download_apk',
