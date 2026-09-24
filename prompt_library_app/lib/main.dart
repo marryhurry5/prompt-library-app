@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -13,21 +14,24 @@ import 'logic/providers/shop_provider.dart';
 import 'logic/providers/user_provider.dart';
 import 'presentation/screens/navigation/main_navigation_screen.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Google Mobile Ads SDK
-  await MobileAds.instance.initialize();
 
-  // Transparent status bar for immersive dark UI
+  // Transparent status bar and themed system navigation bar for immersive dark UI
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.background,
+      systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
 
+  // Render the app UI instantly (<100ms) without waiting for ad network handshakes
   runApp(const AiPromptLibraryApp());
+
+  // Initialize Google Mobile Ads SDK asynchronously in the background
+  unawaited(MobileAds.instance.initialize());
 }
 
 class AiPromptLibraryApp extends StatelessWidget {

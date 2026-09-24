@@ -1,7 +1,7 @@
 name: prompt_library_app
 description: "A modern, clean, and premium AI Prompt Library mobile application connected to PHP/MySQL backend."
 publish_to: "none"
-version: 1.0.4+7
+version: 1.0.5+8
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

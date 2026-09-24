@@ -15,11 +15,11 @@ if (!defined('BOT_BASE_URL')) {
 if (isset($_GET['action']) && $_GET['action'] === 'version_check') {
     echo json_encode([
         'success' => true,
-        'latest_version' => '1.0.4',
+        'latest_version' => '1.0.5',
         'min_supported_version' => '1.0.0',
         'force_update' => false,
         'update_url' => BOT_BASE_URL . 'api.php?action=download_apk',
-        'release_notes' => 'Official Google Play Store Production Release with Live AdMob Ads & Performance Upgrades!'
+        'release_notes' => 'Instant Startup Upgrade (<100ms launch) & New Glowing Crystal Star App Logo!'
     ]);
     exit;
 }
