@@ -27,6 +27,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'version_check') {
 // Direct Download Endpoint for APK with proper Android Package Installer headers
 if (isset($_GET['action']) && $_GET['action'] === 'download_apk') {
     $possible_paths = [
+        dirname(__FILE__) . '/PromptLibrary_v1.0.5_Release.apk',
+        dirname(__FILE__) . '/PromptLibrary_v1.0.4_Release.apk',
         dirname(__FILE__) . '/PromptLibrary_v1.0.3_Release.apk',
         dirname(__FILE__) . '/PromptLibrary_v1.0.2_Release.apk',
         dirname(__FILE__) . '/PromptLibrary_v1.0.1_Universal.apk',
@@ -43,7 +45,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'download_apk') {
     if ($apk_path && file_exists($apk_path)) {
         header('Content-Description: File Transfer');
         header('Content-Type: application/vnd.android.package-archive');
-        header('Content-Disposition: attachment; filename="AI_Prompt_Hub_v1.0.3.apk"');
+        header('Content-Disposition: attachment; filename="AI_Prompt_Hub_v1.0.5.apk"');
         header('Content-Length: ' . filesize($apk_path));
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
